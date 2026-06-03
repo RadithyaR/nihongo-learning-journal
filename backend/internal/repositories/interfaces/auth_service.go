@@ -1,0 +1,15 @@
+package interfaces
+
+import (
+	"context"
+
+	authDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/auth"
+	responses "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
+)
+
+type AuthService interface {
+	Register(
+		ctx context.Context,
+		dto authDTO.RegisterDTO,
+	) (*responses.UserResponse, error)
+}
