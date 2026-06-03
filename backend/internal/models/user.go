@@ -7,6 +7,7 @@ type User struct {
 	Name string `gorm:"size:100;not null"`
 	Email string `gorm:"size:225;unique;not null"`
 	PasswordHash string `gorm:"not null"` 
+	GoogleID *string
 	AvatarUrl *string
 	BaseModel
 }
