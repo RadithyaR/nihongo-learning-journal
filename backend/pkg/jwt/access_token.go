@@ -15,13 +15,19 @@ func GenerateAccessToken(
 			UserID: userID,
 			Email: email,
 			RegisteredClaims: jwtlib.RegisteredClaims{
+				Subject: userID.String(),
+
+				IssuedAt: jwtlib.NewNumericDate(
+					time.Now(),
+				),
+				
 				ExpiresAt: jwtlib.NewNumericDate(
 					time.Now().Add(15 * time.Minute),
 				),
 			},
 		}
 		token := jwtlib.NewWithClaims(
-			jwtlib.SigningMethodES256,
+			jwtlib.SigningMethodHS256,
 			claims,
 		)
 

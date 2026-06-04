@@ -12,4 +12,14 @@ type AuthService interface {
 		ctx context.Context,
 		dto authDTO.RegisterDTO,
 	) (*responses.UserResponse, error)
+
+	Login(
+		ctx context.Context,
+		dto authDTO.LoginDTO,
+	) (*responses.LoginResponse, error)
+	RefreshToken(
+		ctx context.Context,
+		refreshToken string,
+	) (*responses.LoginResponse, error)
 }
+
