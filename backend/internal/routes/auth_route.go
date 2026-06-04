@@ -12,6 +12,7 @@ func AuthRoute(router *gin.RouterGroup, authHandler *handlers.AuthHandler) {
 	auth.POST("/register", authHandler.Register)
 	auth.POST("/login", authHandler.Login)
 	auth.POST("/refresh", authHandler.RefreshToken)
+	auth.POST("/logout", authHandler.Logout)
 	
 	auth.GET("/me", middlewares.JWTMiddleware(), authHandler.Me)
 }

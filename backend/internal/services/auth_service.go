@@ -230,6 +230,42 @@ func (s *authService) RefreshToken(
 	if err != nil {
 		return nil, err
 	}
+	newTokenID := uuid.New()
+
+	newSecret, err := jwt.GenerateRefreshToken()
+
+	if err != nil {
+		return nil, err
+	}
+
+	newRefreshToken :=
+		newTokenID.String() +
+		"." +
+		newSecret
+	
+	hashedSecret, err := hash.HashPassword(
+	newSecret,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+	session.TokenID = newTokenID
+
+	session.RefreshTokenHash = hashedSecret
+
+	session.LastUsedAt = func() *time.Time {
+		now := time.Now()
+		return &now
+	}()
+	err = s.userSessionRepository.Update(
+		ctx,
+		session,
+	)
+
+	if err != nil {
+		return nil, err
+	}
 
 	accessToken, err := jwt.GenerateAccessToken(
 		user.ID,
@@ -243,6 +279,7 @@ func (s *authService) RefreshToken(
 
 	return &responses.LoginResponse{
 		AccessToken: accessToken,
+		RefreshToken: newRefreshToken,
 		User: responses.UserResponse{
 			ID: user.ID,
 			Name: user.Name,
@@ -250,4 +287,48 @@ func (s *authService) RefreshToken(
 			AvatarURL: user.AvatarURL,
 		},
 	}, nil
+}
+
+func (s *authService) Logout(
+	ctx context.Context,
+	refreshToken string,
+) error {
+
+	parts := strings.Split(
+		refreshToken,
+		".",
+	)
+
+	if len(parts) != 2 {
+		return customErrors.ErrInvalidRefreshToken
+	}
+
+	tokenID, err := uuid.Parse(
+		parts[0],
+	)
+
+	if err != nil {
+		return customErrors.ErrInvalidRefreshToken
+	}
+
+	session, err := s.userSessionRepository.
+		FindByTokenID(
+			ctx,
+			tokenID,
+		)
+
+	if err != nil {
+		return customErrors.ErrSessionNotFound
+	}
+
+	err = s.userSessionRepository.Delete(
+		ctx,
+		session.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

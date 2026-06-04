@@ -29,4 +29,8 @@ type UserSessionRepository interface {
 		ctx context.Context,
 		sessionID uuid.UUID,
 	) error
+	DeleteByTokenID(
+		ctx context.Context,
+		tokenID uuid.UUID,
+	) error
 }

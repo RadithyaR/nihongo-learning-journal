@@ -213,6 +213,16 @@ func (h *AuthHandler) RefreshToken(
 		return
 	}
 
+	c.SetCookie(
+		"refresh_token",
+		result.RefreshToken,
+		60*60*24*7,
+		"/",
+		"",
+		false,
+		true,
+	)
+
 	responses.Success(
 		c,
 		http.StatusOK,
@@ -221,5 +231,56 @@ func (h *AuthHandler) RefreshToken(
 			"access_token": result.AccessToken,
 			"user": result.User,
 		},
+	)
+}
+
+func (h *AuthHandler) Logout(
+	c *gin.Context,
+) {
+
+	refreshToken, err := c.Cookie(
+		"refresh_token",
+	)
+
+	if err != nil {
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			"refresh token not found",
+		)
+
+		return
+	}
+
+	err = h.authService.Logout(
+		c.Request.Context(),
+		refreshToken,
+	)
+
+	if err != nil {
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			err.Error(),
+		)
+
+		return
+	}
+
+	c.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		"",
+		false,
+		true,
+	)
+
+	responses.Success(
+		c,
+		http.StatusOK,
+		"logout success",
+		nil,
 	)
 }

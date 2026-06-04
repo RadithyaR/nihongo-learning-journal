@@ -21,5 +21,9 @@ type AuthService interface {
 		ctx context.Context,
 		refreshToken string,
 	) (*responses.LoginResponse, error)
+	Logout(
+		ctx context.Context,
+		refreshToken string,
+	) error
 }
 
