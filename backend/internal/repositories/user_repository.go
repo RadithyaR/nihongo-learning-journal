@@ -84,3 +84,14 @@ func (r *userRepository) FindByGoogleID(
 
 	return &user, nil
 }
+
+func (r *userRepository) Update(
+	ctx context.Context,
+	user *models.User,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Save(user).
+		Error
+}

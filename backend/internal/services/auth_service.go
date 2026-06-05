@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"time"
@@ -23,15 +25,21 @@ import (
 type authService struct {
 	userRepository repositoryInterfaces.UserRepository
 	userSessionRepository repositoryInterfaces.UserSessionRepository
+	emailVerificationRepository repositoryInterfaces.EmailVerificationRepository
+	passwordResetRepository repositoryInterfaces.PasswordResetRepository
 }
 
 func NewAuthService(
 	userRepository repositoryInterfaces.UserRepository,
 	userSessionRepository repositoryInterfaces.UserSessionRepository,
+	emailVerificationRepository repositoryInterfaces.EmailVerificationRepository,
+	passwordResetRepository repositoryInterfaces.PasswordResetRepository,
 ) repositoryInterfaces.AuthService {
 	return &authService{
 		userRepository:        userRepository,
 		userSessionRepository: userSessionRepository,
+		emailVerificationRepository: emailVerificationRepository,
+		passwordResetRepository: passwordResetRepository,
 	}
 }
 
@@ -65,12 +73,36 @@ func (s *authService) Register(
 		Name:         dto.Name,
 		Email:        dto.Email,
 		PasswordHash: hashedPassword,
+		IsVerified:   false,
 	}
 
 	if err := s.userRepository.Create(
 		ctx,
 		&user,
 	); err != nil {
+		return nil, err
+	}
+
+	token, err := s.generateVerificationToken()
+
+	if err != nil {
+		return nil, err
+	}
+
+	verification := models.EmailVerification{
+		UserID: user.ID,
+		Token:  token,
+		ExpiresAt: time.Now().Add(
+			24 * time.Hour,
+		),
+	}
+
+	err = s.emailVerificationRepository.Create(
+		ctx,
+		&verification,
+	)
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -101,71 +133,22 @@ func (s *authService) Login(
 	}
 
 	err = hash.ComparePassword(
-		user.PasswordHash,
-		dto.Password,
+	user.PasswordHash,
+	dto.Password,
 	)
 
 	if err != nil {
 		return nil, customErrors.ErrInvalidCredentials
 	}
 
-	accessToken, err := jwt.GenerateAccessToken(
-		user.ID,
-		user.Email,
-		config.GetEnv("JWT_SECRET"),
-	)
-
-	if err != nil {
-		return nil, err
+	if !user.IsVerified {
+		return nil, customErrors.ErrEmailNotVerified
 	}
 
-	tokenID := uuid.New()
-
-	refreshSecret, err := jwt.GenerateRefreshToken()
-
-	if err != nil {
-		return nil, err
-	}
-
-	refreshToken := tokenID.String() + "." + refreshSecret
-
-	hashedRefreshToken, err := hash.HashPassword(
-		refreshSecret,
-	)
-
-
-	if err != nil {
-		return nil, err
-	}
-
-	session := models.UserSession{
-	TokenID: tokenID,
-	UserID: user.ID,
-	RefreshTokenHash: hashedRefreshToken,
-	ExpiresAt: time.Now().Add(
-		7 * 24 * time.Hour,
-	),
-}
-
-	err = s.userSessionRepository.Create(
+	return s.createLoginSession(
 		ctx,
-		&session,
+		user,
 	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &responses.LoginResponse{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		User: responses.UserResponse{
-			ID:        user.ID,
-			Name:      user.Name,
-			Email:     user.Email,
-			AvatarURL: user.AvatarURL,
-		},
-	}, nil
 }
 
 func (s *authService) RefreshToken(
@@ -324,6 +307,355 @@ func (s *authService) Logout(
 	err = s.userSessionRepository.Delete(
 		ctx,
 		session.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *authService) LogoutAll(
+	ctx context.Context,
+	userID uuid.UUID,
+) error {
+
+	return s.userSessionRepository.DeleteByUserID(
+		ctx,
+		userID,
+	)
+}
+
+
+func (s *authService) createLoginSession(
+	ctx context.Context,
+	user *models.User,
+) (*responses.LoginResponse, error){
+	accessToken, err := jwt.GenerateAccessToken(
+		user.ID,
+		user.Email,
+		config.GetEnv("JWT_SECRET"),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	tokenID := uuid.New()
+
+	refreshSecret, err := jwt.GenerateRefreshToken()
+
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken := tokenID.String() + "." + refreshSecret
+
+	hashedRefreshToken, err := hash.HashPassword(
+		refreshSecret,
+	)
+
+
+	if err != nil {
+		return nil, err
+	}
+
+	session := models.UserSession{
+	TokenID: tokenID,
+	UserID: user.ID,
+	RefreshTokenHash: hashedRefreshToken,
+	ExpiresAt: time.Now().Add(
+		7 * 24 * time.Hour,
+	),
+}
+
+	err = s.userSessionRepository.Create(
+		ctx,
+		&session,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &responses.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		User: responses.UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			AvatarURL: user.AvatarURL,
+		},
+	}, nil
+}
+
+func (s *authService) generateVerificationToken() (
+	string,
+	error,
+) {
+
+	bytes := make([]byte, 32)
+
+	_, err := rand.Read(bytes)
+
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(bytes), nil
+}
+
+func (s *authService) generatePasswordResetToken() (
+	string,
+	error,
+) {
+	return s.generateVerificationToken()
+}
+
+func (s *authService) VerifyEmail(
+	ctx context.Context,
+	token string,
+) error {
+
+	verification, err :=
+		s.emailVerificationRepository.FindByToken(
+			ctx,
+			token,
+		)
+
+	if err != nil {
+		return err
+	}
+
+	if verification.VerifiedAt != nil {
+		return errors.New(
+			"email already verified",
+		)
+	}
+
+	if time.Now().After(
+		verification.ExpiresAt,
+	) {
+		return errors.New(
+			"verification token expired",
+		)
+	}
+
+	user, err := s.userRepository.FindByID(
+		ctx,
+		verification.UserID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	user.IsVerified = true
+
+	err = s.userRepository.Update(
+		ctx,
+		user,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+
+	verification.VerifiedAt = &now
+
+	err = s.emailVerificationRepository.Update(
+		ctx,
+		verification,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *authService) ForgotPassword(
+	ctx context.Context,
+	dto authDTO.ForgotPasswordDTO,
+) (string, error) {
+
+	user, err := s.userRepository.FindByEmail(
+		ctx,
+		dto.Email,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	err = s.passwordResetRepository.DeleteByUserID(
+		ctx,
+		user.ID,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	token, err := s.generatePasswordResetToken()
+
+	if err != nil {
+		return "", err
+	}
+
+	reset := models.PasswordReset{
+		UserID: user.ID,
+		Token: token,
+		ExpiresAt: time.Now().Add(
+			1 * time.Hour,
+		),
+	}
+
+	err = s.passwordResetRepository.Create(
+		ctx,
+		&reset,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (s *authService) ResetPassword(
+	ctx context.Context,
+	dto authDTO.ResetPasswordDTO,
+) error {
+
+	reset, err := s.passwordResetRepository.
+		FindByToken(
+			ctx,
+			dto.Token,
+		)
+
+	if err != nil {
+		return err
+	}
+
+	if reset.UsedAt != nil {
+		return errors.New(
+			"reset token already used",
+		)
+	}
+
+	if time.Now().After(
+		reset.ExpiresAt,
+	) {
+		return errors.New(
+			"reset token expired",
+		)
+	}
+
+	user, err := s.userRepository.FindByID(
+		ctx,
+		reset.UserID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	hashedPassword, err := hash.HashPassword(
+		dto.NewPassword,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = hashedPassword
+
+	err = s.userRepository.Update(
+		ctx,
+		user,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	now := time.Now()
+
+	reset.UsedAt = &now
+
+	err = s.passwordResetRepository.Update(
+		ctx,
+		reset,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.userSessionRepository.DeleteByUserID(
+		ctx,
+		user.ID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *authService) ChangePassword(
+	ctx context.Context,
+	userID uuid.UUID,
+	dto authDTO.ChangePasswordDTO,
+) error {
+
+	user, err := s.userRepository.FindByID(
+		ctx,
+		userID,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	err = hash.ComparePassword(
+		user.PasswordHash,
+		dto.CurrentPassword,
+	)
+
+	if err != nil {
+		return customErrors.ErrInvalidCredentials
+	}
+
+	hashedPassword, err := hash.HashPassword(
+		dto.NewPassword,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = hashedPassword
+
+	err = s.userRepository.Update(
+		ctx,
+		user,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	err = s.userSessionRepository.DeleteByUserID(
+		ctx,
+		userID,
 	)
 
 	if err != nil {

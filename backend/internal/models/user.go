@@ -9,5 +9,6 @@ type User struct {
 	PasswordHash string `gorm:"not null"` 
 	GoogleID *string `gorm:"uniqueIndex"`
 	AvatarURL *string
+	IsVerified bool `gorm:"default:false"`
 	BaseModel
 }

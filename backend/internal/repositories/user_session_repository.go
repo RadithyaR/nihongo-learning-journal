@@ -110,3 +110,18 @@ func (r *userSessionRepository) DeleteByTokenID(
 		).
 		Error
 }
+
+func (r *userSessionRepository) DeleteByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+) error {
+
+	return r.db.
+		WithContext(ctx).
+		Delete(
+			&models.UserSession{},
+			"user_id = ?",
+			userID,
+		).
+		Error
+}

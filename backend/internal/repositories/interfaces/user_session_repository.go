@@ -33,4 +33,8 @@ type UserSessionRepository interface {
 		ctx context.Context,
 		tokenID uuid.UUID,
 	) error
+	DeleteByUserID(
+		ctx context.Context,
+		userID uuid.UUID,
+	) error
 }

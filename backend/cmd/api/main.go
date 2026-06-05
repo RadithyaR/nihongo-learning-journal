@@ -35,10 +35,23 @@ func main() {
 		database.DB,
 	)
 
+	emailVerificationRepository :=
+	repositories.NewEmailVerificationRepository(
+		database.DB,
+	)
+
+	passwordResetRepository :=
+	repositories.NewPasswordResetRepository(
+		database.DB,
+	)
+
 	authService := services.NewAuthService(
 		userRepository,
 		userSessionRepository,
+		emailVerificationRepository,
+		passwordResetRepository,
 	)
+	
 
 	authHandler := handlers.NewAuthHandler(
 		authService,
