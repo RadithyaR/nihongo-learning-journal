@@ -27,4 +27,8 @@ type UserRepository interface {
 		ctx context.Context,
 		googleID string,
 	) (*models.User, error)
+	Update(
+		ctx context.Context,
+		user *models.User,
+	) error
 }

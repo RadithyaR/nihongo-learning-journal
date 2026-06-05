@@ -12,6 +12,6 @@ type Vocabulary struct {
 	Note *string
 	Status *string `gorm:"size:20;default:NEW"`
 	Favourite bool `gorm:"default:false"`
-	Meaning []VocabularyMeaning `gorm:foreignKey:VocabularyID`
+	Meaning []VocabularyMeaning `gorm:"foreignKey:VocabularyID"`
 	BaseModel
 }
