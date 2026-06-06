@@ -3,7 +3,7 @@ package models
 import "github.com/google/uuid"
 
 type Vocabulary struct {
-	ID uuid.UUID `gorm:"type:uuid;default;gen_random_uuid();primaryKey"`
+	ID uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	UserID uuid.UUID `gorm:"type:uuid;not null"`
 	User User `gorm:"foreignKey:UserID"`
 	Word string `gorm:"size:255;not null"`
@@ -12,6 +12,6 @@ type Vocabulary struct {
 	Note *string
 	Status *string `gorm:"size:20;default:NEW"`
 	Favourite bool `gorm:"default:false"`
-	Meaning []VocabularyMeaning `gorm:"foreignKey:VocabularyID"`
+	Meanings []VocabularyMeaning `gorm:"foreignKey:VocabularyID"`
 	BaseModel
 }

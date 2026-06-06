@@ -23,4 +23,19 @@ type VocabularyRepository interface {
 		userID uuid.UUID,
 		word string,
 	) (*models.Vocabulary, error)
+
+	FindAllByUserID(
+		ctx context.Context,
+		userID uuid.UUID,
+	) ([]models.Vocabulary, error)
+
+	Update(
+		ctx context.Context,
+		vocabulary *models.Vocabulary,
+	) error
+
+	Delete(
+		ctx context.Context,
+		id uuid.UUID,
+	) error
 }
