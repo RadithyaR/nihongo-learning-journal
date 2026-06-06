@@ -27,23 +27,14 @@ func main() {
 		})
 	})
 
-	userRepository := repositories.NewUserRepository(
-		database.DB,
-	)
-	userSessionRepository :=
-	repositories.NewUserSessionRepository(
-		database.DB,
-	)
+	userRepository := repositories.NewUserRepository(database.DB)
+	userSessionRepository := repositories.NewUserSessionRepository(database.DB)
 
-	emailVerificationRepository :=
-	repositories.NewEmailVerificationRepository(
-		database.DB,
-	)
+	emailVerificationRepository := 
+	repositories.NewEmailVerificationRepository(database.DB)
 
 	passwordResetRepository :=
-	repositories.NewPasswordResetRepository(
-		database.DB,
-	)
+	repositories.NewPasswordResetRepository(database.DB)
 
 	authService := services.NewAuthService(
 		userRepository,
@@ -51,17 +42,18 @@ func main() {
 		emailVerificationRepository,
 		passwordResetRepository,
 	)
-	
 
-	authHandler := handlers.NewAuthHandler(
-		authService,
-		
-	)
+	profileService := services.NewProfileService(userRepository)
+
+	authHandler := handlers.NewAuthHandler(authService)
+
+	profileHandler := handlers.NewProfileHandler(profileService)
 
 	//route
 	api := r.Group("/api/v1")	
 
-	routes.AuthRoute(api, authHandler,)
+	routes.AuthRoute(api, authHandler)
+	routes.ProfileRoute(api, profileHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
