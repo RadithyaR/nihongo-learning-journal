@@ -27,6 +27,7 @@ func main() {
 		})
 	})
 
+	//repository
 	userRepository := repositories.NewUserRepository(database.DB)
 	userSessionRepository := repositories.NewUserSessionRepository(database.DB)
 
@@ -35,7 +36,12 @@ func main() {
 
 	passwordResetRepository :=
 	repositories.NewPasswordResetRepository(database.DB)
+	vocabularyRepository :=
+	repositories.NewVocabularyRepository(
+		database.DB,
+	)
 
+	//service
 	authService := services.NewAuthService(
 		userRepository,
 		userSessionRepository,
@@ -44,16 +50,21 @@ func main() {
 	)
 
 	profileService := services.NewProfileService(userRepository)
+	vocabularyService := services.NewVocabularyService(vocabularyRepository)
 
+	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
 	profileHandler := handlers.NewProfileHandler(profileService)
+
+	vocabularyHandler :=handlers.NewVocabularyHandler(vocabularyService)
 
 	//route
 	api := r.Group("/api/v1")	
 
 	routes.AuthRoute(api, authHandler)
 	routes.ProfileRoute(api, profileHandler)
+	routes.VocabularyRoute(api, vocabularyHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
