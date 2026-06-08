@@ -8,7 +8,6 @@ import (
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
 	appValidator "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type ReviewHandler struct {
@@ -28,31 +27,14 @@ func (h *ReviewHandler) GetNextReview(
 	c *gin.Context,
 ) {
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
-
+	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
 		)
-
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
-		)
-
 		return
 	}
 
@@ -112,31 +94,14 @@ func (h *ReviewHandler) SubmitReview(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
-
+	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
 		)
-
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
-		)
-
 		return
 	}
 
@@ -161,9 +126,6 @@ func (h *ReviewHandler) SubmitReview(
 		c,
 		http.StatusCreated,
 		"review submitted successfully",
-		gin.H{
-		"vocabulary_id": dto.VocabularyID,
-		"rating": dto.Rating,
-		},
+		nil,
 	)
 }

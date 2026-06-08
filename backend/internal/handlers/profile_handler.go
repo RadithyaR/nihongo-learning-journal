@@ -8,7 +8,6 @@ import (
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
 	appValidator "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/validator"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 type ProfileHandler struct {
@@ -27,26 +26,13 @@ func (h *ProfileHandler) GetProfile(
 	c *gin.Context,
 ) {
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
-
-	if !exists {
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"user not found",
-		)
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
+	userID, ok := GetUserID(c)
 
 	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
-			"invalid user",
+			"user not found",
 		)
 		return
 	}
@@ -105,31 +91,14 @@ func (h *ProfileHandler) UpdateProfile(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
-
+	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
 		)
-
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
-		)
-
 		return
 	}
 
