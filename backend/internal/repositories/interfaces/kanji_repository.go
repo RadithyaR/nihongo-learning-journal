@@ -44,4 +44,8 @@ type KanjiRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
+	FindRandomByUserID(
+		ctx context.Context,
+		userID uuid.UUID,
+	) (*models.Kanji, error)
 }

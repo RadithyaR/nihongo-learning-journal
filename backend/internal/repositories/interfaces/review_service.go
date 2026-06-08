@@ -18,4 +18,14 @@ type ReviewService interface {
 		userID uuid.UUID,
 		dto reviewDTO.SubmitReviewRequest,
 	) error
+	GetNextKanjiReview(
+		ctx context.Context,
+		userID uuid.UUID,
+	) (*reviewDTO.NextKanjiReviewResponse, error)
+
+	SubmitKanjiReview(
+		ctx context.Context,
+		userID uuid.UUID,
+		dto reviewDTO.SubmitReviewRequest,
+	) error
 }

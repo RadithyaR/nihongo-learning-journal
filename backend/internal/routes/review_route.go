@@ -11,21 +11,15 @@ func ReviewRoute(
 	reviewHandler *handlers.ReviewHandler,
 ) {
 
-	reviews := router.Group(
-		"/reviews",
-	)
+	reviews := router.Group("/reviews")
 
-	reviews.Use(
-		middlewares.JWTMiddleware(),
-	)
+	reviews.Use(middlewares.JWTMiddleware())
 
-	reviews.GET(
-		"/next",
-		reviewHandler.GetNextReview,
-	)
+	reviews.GET("/next", reviewHandler.GetNextReview)
 
-	reviews.POST(
-		"",
-		reviewHandler.SubmitReview,
-	)
+	reviews.POST("", reviewHandler.SubmitReview)
+
+	reviews.GET("/kanji/next", reviewHandler.GetNextKanjiReview)
+
+	reviews.POST("/kanji", reviewHandler.SubmitKanjiReview)
 }
