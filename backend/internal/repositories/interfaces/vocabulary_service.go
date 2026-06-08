@@ -23,6 +23,7 @@ type VocabularyService interface {
 	GetVocabularyList(
 		ctx context.Context,
 		userID uuid.UUID,
+		search string,
 	) ([]vocabularyDTO.VocabularyResponse, error)
 
 	UpdateVocabulary(
@@ -37,4 +38,9 @@ type VocabularyService interface {
 		userID uuid.UUID,
 		id uuid.UUID,
 	) error
+	ToggleFavourite(
+		ctx context.Context,
+		userID uuid.UUID,
+		id uuid.UUID,
+	) (*vocabularyDTO.VocabularyResponse, error)
 }

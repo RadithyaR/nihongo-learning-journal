@@ -23,5 +23,7 @@ func VocabularyRoute(
 
 	vocabularies.PUT("/:id", vocabularyHandler.UpdateVocabulary)
 
+	vocabularies.PATCH("/:id/favourite", vocabularyHandler.ToggleFavourite)
+
 	vocabularies.DELETE("/:id", vocabularyHandler.DeleteVocabulary)
 }

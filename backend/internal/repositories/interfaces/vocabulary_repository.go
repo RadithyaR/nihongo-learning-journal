@@ -38,4 +38,13 @@ type VocabularyRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
+	SearchByUserID(
+		ctx context.Context,
+		userID uuid.UUID,
+		search string,
+	) ([]models.Vocabulary, error)
+	FindRandomByUserID(
+		ctx context.Context,
+		userID uuid.UUID,
+	) (*models.Vocabulary, error)
 }
