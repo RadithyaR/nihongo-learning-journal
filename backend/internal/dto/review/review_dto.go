@@ -3,8 +3,8 @@ package reviewdto
 import "github.com/google/uuid"
 
 type SubmitReviewRequest struct {
-	VocabularyID uuid.UUID `json:"vocabulary_id" validate:"required"`
-	Rating       string    `json:"rating" validate:"required,oneof=AGAIN HARD GOOD EASY"`
+	ItemID uuid.UUID `json:"item_id" validate:"required"`
+	Rating string `json:"rating" validate:"required,oneof=AGAIN HARD GOOD EASY"`
 }
 
 type NextReviewResponse struct {

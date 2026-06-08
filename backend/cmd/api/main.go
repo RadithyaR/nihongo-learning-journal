@@ -61,6 +61,7 @@ func main() {
 	reviewService := services.NewReviewService(
 		reviewRepository,
 		vocabularyRepository,
+		kanjiRepository,
 	)
 
 	kanjiService := services.NewKanjiService(kanjiRepository)

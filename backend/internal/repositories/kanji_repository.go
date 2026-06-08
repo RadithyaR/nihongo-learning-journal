@@ -133,3 +133,23 @@ func (r *kanjiRepository) Delete(
 		Delete(&models.Kanji{}, id).
 		Error
 }
+
+func (r *kanjiRepository) FindRandomByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*models.Kanji, error) {
+
+	var kanji models.Kanji
+
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		Order("RANDOM()").
+		First(&kanji).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &kanji, nil
+}
