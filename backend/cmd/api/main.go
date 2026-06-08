@@ -43,6 +43,9 @@ func main() {
 	reviewRepository := 
 	repositories.NewReviewRepository(database.DB)
 
+	kanjiRepository :=
+	repositories.NewKanjiRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -60,6 +63,8 @@ func main() {
 		vocabularyRepository,
 	)
 
+	kanjiService := services.NewKanjiService(kanjiRepository)
+
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -68,6 +73,8 @@ func main() {
 	vocabularyHandler :=handlers.NewVocabularyHandler(vocabularyService)
 
 	reviewHandler := handlers.NewReviewHandler(reviewService)
+
+	kanjiHandler := handlers.NewKanjiHandler(kanjiService)
 
 	//route
 	api := r.Group("/api/v1")	
@@ -79,6 +86,8 @@ func main() {
 	routes.VocabularyRoute(api, vocabularyHandler)
 	
 	routes.ReviewRoute(api, reviewHandler)
+
+	routes.KanjiRoute(api, kanjiHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }

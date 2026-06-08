@@ -48,24 +48,13 @@ func (h *VocabularyHandler) CreateVocabulary(
 		return
 	}
 
-	userIDValue, exists := c.Get("user_id")
-
-	if !exists {
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"user not found",
-		)
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
+	userID, ok := GetUserID(c)
 
 	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
-			"invalid user",
+			"user not found",
 		)
 		return
 	}
@@ -113,26 +102,13 @@ func (h *VocabularyHandler) GetVocabularyList(
 	c *gin.Context,
 ) {
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
+if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
-		)
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
 		)
 		return
 	}
@@ -183,26 +159,13 @@ func (h *VocabularyHandler) GetVocabularyByID(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
-
-	if !exists {
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"user not found",
-		)
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
+	userID, ok := GetUserID(c)
 
 	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
-			"invalid user",
+			"user not found",
 		)
 		return
 	}
@@ -295,26 +258,13 @@ func (h *VocabularyHandler) UpdateVocabulary(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
-
-	if !exists {
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"user not found",
-		)
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
+	userID, ok := GetUserID(c)
 
 	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
-			"invalid user",
+			"user not found",
 		)
 		return
 	}
@@ -382,31 +332,14 @@ func (h *VocabularyHandler) DeleteVocabulary(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
-
+	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
 		)
-
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
-		)
-
 		return
 	}
 
@@ -471,31 +404,14 @@ func (h *VocabularyHandler) ToggleFavourite(
 		return
 	}
 
-	userIDValue, exists := c.Get(
-		"user_id",
-	)
+	userID, ok := GetUserID(c)
 
-	if !exists {
-
+	if !ok {
 		responses.Error(
 			c,
 			http.StatusUnauthorized,
 			"user not found",
 		)
-
-		return
-	}
-
-	userID, ok := userIDValue.(uuid.UUID)
-
-	if !ok {
-
-		responses.Error(
-			c,
-			http.StatusUnauthorized,
-			"invalid user",
-		)
-
 		return
 	}
 
