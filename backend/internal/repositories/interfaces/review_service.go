@@ -1,0 +1,21 @@
+package interfaces
+
+import (
+	"context"
+
+	reviewDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/review"
+	"github.com/google/uuid"
+)
+
+type ReviewService interface {
+	GetNextReview(
+		ctx context.Context,
+		userID uuid.UUID,
+	) (*reviewDTO.NextReviewResponse, error)
+
+	SubmitReview(
+		ctx context.Context,
+		userID uuid.UUID,
+		dto reviewDTO.SubmitReviewRequest,
+	) error
+}

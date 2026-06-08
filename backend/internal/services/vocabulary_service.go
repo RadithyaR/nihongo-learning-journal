@@ -152,13 +152,31 @@ func (s *vocabularyService) GetVocabularyByID(
 func (s *vocabularyService) GetVocabularyList(
 	ctx context.Context,
 	userID uuid.UUID,
+	search string,
 ) ([]vocabularyDTO.VocabularyResponse, error) {
 
-	vocabularies, err :=
-		s.vocabularyRepository.FindAllByUserID(
-			ctx,
-			userID,
-		)
+	var (
+		vocabularies []models.Vocabulary
+		err error
+	)
+
+	if search != "" {
+
+		vocabularies, err =
+			s.vocabularyRepository.SearchByUserID(
+				ctx,
+				userID,
+				search,
+			)
+
+	} else {
+
+		vocabularies, err =
+			s.vocabularyRepository.FindAllByUserID(
+				ctx,
+				userID,
+			)
+	}
 
 	if err != nil {
 		return nil, err
@@ -249,4 +267,44 @@ func (s *vocabularyService) DeleteVocabulary(
 		ctx,
 		id,
 	)
+}
+
+func (s *vocabularyService) ToggleFavourite(
+	ctx context.Context,
+	userID uuid.UUID,
+	id uuid.UUID,
+) (*vocabularyDTO.VocabularyResponse, error) {
+
+	vocabulary, err :=
+		s.vocabularyRepository.FindByID(
+			ctx,
+			id,
+		)
+
+	if err != nil {
+		return nil,
+			customErrors.ErrVocabularyNotFound
+	}
+
+	if vocabulary.UserID != userID {
+		return nil,
+			customErrors.ErrVocabularyNotFound
+	}
+
+	vocabulary.Favourite =
+		!vocabulary.Favourite
+
+	err =
+		s.vocabularyRepository.Update(
+			ctx,
+			vocabulary,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return s.mapVocabularyResponse(
+		vocabulary,
+	), nil
 }

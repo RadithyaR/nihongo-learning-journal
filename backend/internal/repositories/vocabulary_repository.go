@@ -135,3 +135,50 @@ func (r *vocabularyRepository) Delete(
 		id,
 	).Error
 }
+
+func (r *vocabularyRepository) SearchByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+	search string,
+) ([]models.Vocabulary, error) {
+
+	var vocabularies []models.Vocabulary
+
+	err := r.db.WithContext(ctx).
+		Preload("Meanings").
+		Where(
+			"user_id = ? AND word ILIKE ?",
+			userID,
+			"%"+search+"%",
+		).
+		Find(&vocabularies).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vocabularies, nil
+}
+
+func (r *vocabularyRepository) FindRandomByUserID(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*models.Vocabulary, error) {
+
+	var vocabulary models.Vocabulary
+
+	err := r.db.WithContext(ctx).
+		Preload("Meanings").
+		Where(
+			"user_id = ?",
+			userID,
+		).
+		Order("RANDOM()").
+		First(&vocabulary).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &vocabulary, nil
+}

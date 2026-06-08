@@ -136,11 +136,13 @@ func (h *VocabularyHandler) GetVocabularyList(
 		)
 		return
 	}
+	search := c.Query("search")
 
 	vocabularies, err :=
 		h.vocabularyService.GetVocabularyList(
 			c.Request.Context(),
 			userID,
+			search,
 		)
 
 	if err != nil {
@@ -443,5 +445,94 @@ func (h *VocabularyHandler) DeleteVocabulary(
 		http.StatusOK,
 		"vocabulary deleted successfully",
 		nil,
+	)
+}
+
+func (h *VocabularyHandler) ToggleFavourite(
+	c *gin.Context,
+) {
+
+	idParam := c.Param(
+		"id",
+	)
+
+	vocabularyID, err := uuid.Parse(
+		idParam,
+	)
+
+	if err != nil {
+
+		responses.Error(
+			c,
+			http.StatusBadRequest,
+			"invalid vocabulary id",
+		)
+
+		return
+	}
+
+	userIDValue, exists := c.Get(
+		"user_id",
+	)
+
+	if !exists {
+
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			"user not found",
+		)
+
+		return
+	}
+
+	userID, ok := userIDValue.(uuid.UUID)
+
+	if !ok {
+
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			"invalid user",
+		)
+
+		return
+	}
+
+	vocabulary, err := h.vocabularyService.ToggleFavourite(
+		c.Request.Context(),
+		userID,
+		vocabularyID,
+	)
+
+	if err != nil {
+
+		switch err {
+
+		case customErrors.ErrVocabularyNotFound:
+
+			responses.Error(
+				c,
+				http.StatusNotFound,
+				err.Error(),
+			)
+
+		default:
+
+			responses.Error(
+				c,
+				http.StatusInternalServerError,
+				"internal server error",
+			)
+		}
+
+		return
+	}
+
+	responses.Success(
+		c,
+		http.StatusOK,
+		"vocabulary favourite updated successfully",
+		vocabulary,
 	)
 }

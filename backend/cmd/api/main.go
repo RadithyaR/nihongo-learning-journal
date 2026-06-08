@@ -34,12 +34,14 @@ func main() {
 	emailVerificationRepository := 
 	repositories.NewEmailVerificationRepository(database.DB)
 
-	passwordResetRepository :=
+	passwordResetRepository := 
 	repositories.NewPasswordResetRepository(database.DB)
-	vocabularyRepository :=
-	repositories.NewVocabularyRepository(
-		database.DB,
-	)
+
+	vocabularyRepository := 
+	repositories.NewVocabularyRepository(database.DB)
+
+	reviewRepository := 
+	repositories.NewReviewRepository(database.DB)
 
 	//service
 	authService := services.NewAuthService(
@@ -50,7 +52,13 @@ func main() {
 	)
 
 	profileService := services.NewProfileService(userRepository)
+
 	vocabularyService := services.NewVocabularyService(vocabularyRepository)
+
+	reviewService := services.NewReviewService(
+		reviewRepository,
+		vocabularyRepository,
+	)
 
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
@@ -59,12 +67,18 @@ func main() {
 
 	vocabularyHandler :=handlers.NewVocabularyHandler(vocabularyService)
 
+	reviewHandler := handlers.NewReviewHandler(reviewService)
+
 	//route
 	api := r.Group("/api/v1")	
 
 	routes.AuthRoute(api, authHandler)
+
 	routes.ProfileRoute(api, profileHandler)
+
 	routes.VocabularyRoute(api, vocabularyHandler)
+	
+	routes.ReviewRoute(api, reviewHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
