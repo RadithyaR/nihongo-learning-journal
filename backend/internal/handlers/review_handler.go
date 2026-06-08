@@ -234,3 +234,113 @@ func (h *ReviewHandler) SubmitKanjiReview(
 		nil,
 	)
 }
+
+func (h *ReviewHandler) GetNextGrammarReview(
+	c *gin.Context,
+) {
+
+	userID, ok := GetUserID(c)
+
+	if !ok {
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			"user not found",
+		)
+		return
+	}
+
+	result, err :=
+		h.reviewService.GetNextGrammarReview(
+			c.Request.Context(),
+			userID,
+		)
+
+	if err != nil {
+
+		responses.Error(
+			c,
+			http.StatusInternalServerError,
+			err.Error(),
+		)
+
+		return
+	}
+
+	responses.Success(
+		c,
+		http.StatusOK,
+		"next grammar review",
+		result,
+	)
+}
+
+func (h *ReviewHandler) SubmitGrammarReview(
+	c *gin.Context,
+) {
+
+	var dto reviewDTO.SubmitGrammarReviewRequest
+
+	if err := c.ShouldBindJSON(
+		&dto,
+	); err != nil {
+
+		responses.Error(
+			c,
+			http.StatusBadRequest,
+			"invalid request body",
+		)
+
+		return
+	}
+
+	if err := appValidator.Validate.Struct(
+		dto,
+	); err != nil {
+
+		responses.Error(
+			c,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+
+		return
+	}
+
+	userID, ok := GetUserID(c)
+
+	if !ok {
+
+		responses.Error(
+			c,
+			http.StatusUnauthorized,
+			"user not found",
+		)
+
+		return
+	}
+
+	err := h.reviewService.SubmitGrammarReview(
+		c.Request.Context(),
+		userID,
+		dto,
+	)
+
+	if err != nil {
+
+		responses.Error(
+			c,
+			http.StatusBadRequest,
+			err.Error(),
+		)
+
+		return
+	}
+
+	responses.Success(
+		c,
+		http.StatusOK,
+		"grammar review submitted successfully",
+		nil,
+	)
+}

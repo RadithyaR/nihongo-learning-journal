@@ -16,18 +16,21 @@ type reviewService struct {
 	reviewRepository repositoryInterfaces.ReviewRepository
 	vocabularyRepository repositoryInterfaces.VocabularyRepository
 	kanjiRepository repositoryInterfaces.KanjiRepository
+	grammarRepository repositoryInterfaces.GrammarRepository
 }
 
 func NewReviewService(
 	reviewRepository repositoryInterfaces.ReviewRepository,
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
 	kanjiRepository repositoryInterfaces.KanjiRepository,
+	grammarRepository repositoryInterfaces.GrammarRepository,
 ) repositoryInterfaces.ReviewService {
 
 	return &reviewService{
 		reviewRepository: reviewRepository,
 		vocabularyRepository: vocabularyRepository,
 		kanjiRepository: kanjiRepository,
+		grammarRepository: grammarRepository,
 	}
 }
 
@@ -136,6 +139,61 @@ func (s *reviewService) SubmitKanjiReview(
 		ItemType:   constants.ReviewTypeKanji,
 		ItemID:     dto.ItemID,
 		Rating:     dto.Rating,
+		ReviewedAt: time.Now(),
+	}
+
+	return s.reviewRepository.Create(
+		ctx,
+		&review,
+	)
+}
+
+func (s *reviewService) GetNextGrammarReview(
+	ctx context.Context,
+	userID uuid.UUID,
+) (*reviewDTO.NextGrammarReviewResponse, error) {
+
+	grammar, err :=
+		s.grammarRepository.FindRandomByUserID(
+			ctx,
+			userID,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &reviewDTO.NextGrammarReviewResponse{
+		ID: grammar.ID,
+		Pattern: grammar.Pattern,
+		Meaning: grammar.Meaning,
+	}, nil
+}
+
+func (s *reviewService) SubmitGrammarReview(
+	ctx context.Context,
+	userID uuid.UUID,
+	dto reviewDTO.SubmitGrammarReviewRequest,
+) error {
+	grammar, err :=
+		s.grammarRepository.FindByID(
+			ctx,
+			dto.GrammarID,
+		)
+
+	if err != nil {
+		return customErrors.ErrGrammarNotFound
+	}
+
+	if grammar.UserID != userID {
+		return customErrors.ErrGrammarNotFound
+	}
+
+	review := models.ReviewLog{
+		UserID: userID,
+		ItemType: constants.ReviewTypeGrammar,
+		ItemID: dto.GrammarID,
+		Rating: dto.Rating,
 		ReviewedAt: time.Now(),
 	}
 

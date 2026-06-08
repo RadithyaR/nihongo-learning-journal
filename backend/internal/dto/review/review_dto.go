@@ -1,4 +1,4 @@
-package reviewdto
+package review
 
 import "github.com/google/uuid"
 
