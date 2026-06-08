@@ -28,4 +28,14 @@ type ReviewService interface {
 		userID uuid.UUID,
 		dto reviewDTO.SubmitReviewRequest,
 	) error
+	GetNextGrammarReview(
+		ctx context.Context,
+		userID uuid.UUID,
+	) (*reviewDTO.NextGrammarReviewResponse, error)
+
+	SubmitGrammarReview(
+		ctx context.Context,
+		userID uuid.UUID,
+		dto reviewDTO.SubmitGrammarReviewRequest,
+	) error
 }

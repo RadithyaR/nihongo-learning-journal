@@ -1,4 +1,4 @@
-package kanjiDTO
+package kanji
 
 import "github.com/google/uuid"
 

@@ -16,10 +16,11 @@ func ReviewRoute(
 	reviews.Use(middlewares.JWTMiddleware())
 
 	reviews.GET("/next", reviewHandler.GetNextReview)
-
 	reviews.POST("", reviewHandler.SubmitReview)
 
 	reviews.GET("/kanji/next", reviewHandler.GetNextKanjiReview)
-
 	reviews.POST("/kanji", reviewHandler.SubmitKanjiReview)
+
+	reviews.GET("/grammar/next", reviewHandler.GetNextGrammarReview)
+	reviews.POST("/grammar", reviewHandler.SubmitGrammarReview)
 }

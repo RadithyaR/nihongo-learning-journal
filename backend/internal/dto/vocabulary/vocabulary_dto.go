@@ -1,4 +1,4 @@
-package vocabularydto
+package vocabulary
 
 import "github.com/google/uuid"
 
