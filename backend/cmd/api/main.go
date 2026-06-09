@@ -52,6 +52,9 @@ func main() {
 	studySessionRepository :=
 	repositories.NewStudySessionRepository(database.DB)
 
+	goalRepository :=
+	repositories.NewGoalRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -83,6 +86,8 @@ func main() {
 
 	grammarService := services.NewGrammarService(grammarRepository)
 
+	goalService := services.NewGoalService(goalRepository)
+
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -97,6 +102,8 @@ func main() {
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 
 	studySessionHandler := handlers.NewStudySessionHandler(studySessionService)
+
+	goalHandler := handlers.NewGoalHandler(goalService)
 
 	//route
 	api := r.Group("/api/v1")	
@@ -114,6 +121,8 @@ func main() {
 	routes.GrammarRoute(api, grammarHandler)
 
 	routes.StudySessionRoute(api, studySessionHandler)
+
+	routes.GoalRoute(api, goalHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
