@@ -17,6 +17,7 @@ type reviewService struct {
 	vocabularyRepository repositoryInterfaces.VocabularyRepository
 	kanjiRepository repositoryInterfaces.KanjiRepository
 	grammarRepository repositoryInterfaces.GrammarRepository
+	studySessionService repositoryInterfaces.StudySessionService
 }
 
 func NewReviewService(
@@ -24,6 +25,7 @@ func NewReviewService(
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
 	kanjiRepository repositoryInterfaces.KanjiRepository,
 	grammarRepository repositoryInterfaces.GrammarRepository,
+	studySessionService repositoryInterfaces.StudySessionService,
 ) repositoryInterfaces.ReviewService {
 
 	return &reviewService{
@@ -31,6 +33,7 @@ func NewReviewService(
 		vocabularyRepository: vocabularyRepository,
 		kanjiRepository: kanjiRepository,
 		grammarRepository: grammarRepository,
+		studySessionService: studySessionService,
 	}
 }
 
@@ -84,9 +87,19 @@ func (s *reviewService) SubmitReview(
 		return customErrors.ErrVocabularyNotFound
 	}
 
-	return s.reviewRepository.Create(
+	err = s.reviewRepository.Create(
 		ctx,
 		&review,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return s.studySessionService.AddVocabulary(
+		ctx,
+		userID,
+		dto.ItemID,
 	)
 }
 
@@ -142,10 +155,20 @@ func (s *reviewService) SubmitKanjiReview(
 		ReviewedAt: time.Now(),
 	}
 
-	return s.reviewRepository.Create(
+	err = s.reviewRepository.Create(
 		ctx,
 		&review,
 	)
+
+	if err != nil {
+		return err
+	}
+
+	return s.studySessionService.AddKanji(
+		ctx,
+		userID,
+		dto.ItemID,
+)
 }
 
 func (s *reviewService) GetNextGrammarReview(
@@ -197,8 +220,18 @@ func (s *reviewService) SubmitGrammarReview(
 		ReviewedAt: time.Now(),
 	}
 
-	return s.reviewRepository.Create(
+	err = s.reviewRepository.Create(
 		ctx,
 		&review,
+	)
+
+	if err != nil {
+		return err
+	}
+
+	return s.studySessionService.AddGrammar(
+		ctx,
+		userID,
+		dto.GrammarID,
 	)
 }

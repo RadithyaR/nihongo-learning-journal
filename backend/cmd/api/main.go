@@ -49,6 +49,9 @@ func main() {
 	grammarRepository :=
 	repositories.NewGrammarRepository(database.DB)
 
+	studySessionRepository :=
+	repositories.NewStudySessionRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -61,12 +64,19 @@ func main() {
 
 	vocabularyService := services.NewVocabularyService(vocabularyRepository)
 
+	studySessionService := services.NewStudySessionService(
+	studySessionRepository,
+	vocabularyRepository,
+	kanjiRepository,
+	grammarRepository,
+)
 
 	reviewService := services.NewReviewService(
 		reviewRepository,
 		vocabularyRepository,
 		kanjiRepository,
 		grammarRepository,
+		studySessionService,
 	)
 
 	kanjiService := services.NewKanjiService(kanjiRepository)
@@ -86,6 +96,8 @@ func main() {
 
 	grammarHandler := handlers.NewGrammarHandler(grammarService)
 
+	studySessionHandler := handlers.NewStudySessionHandler(studySessionService)
+
 	//route
 	api := r.Group("/api/v1")	
 
@@ -100,6 +112,8 @@ func main() {
 	routes.KanjiRoute(api, kanjiHandler)
 
 	routes.GrammarRoute(api, grammarHandler)
+
+	routes.StudySessionRoute(api, studySessionHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
