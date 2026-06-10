@@ -8,6 +8,7 @@ import (
 	reviewDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/review"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/google/uuid"
 )
@@ -17,7 +18,7 @@ type reviewService struct {
 	vocabularyRepository repositoryInterfaces.VocabularyRepository
 	kanjiRepository repositoryInterfaces.KanjiRepository
 	grammarRepository repositoryInterfaces.GrammarRepository
-	studySessionService repositoryInterfaces.StudySessionService
+	studySessionService serviceInterface.StudySessionService
 }
 
 func NewReviewService(
@@ -25,8 +26,8 @@ func NewReviewService(
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
 	kanjiRepository repositoryInterfaces.KanjiRepository,
 	grammarRepository repositoryInterfaces.GrammarRepository,
-	studySessionService repositoryInterfaces.StudySessionService,
-) repositoryInterfaces.ReviewService {
+	studySessionService serviceInterface.StudySessionService,
+) serviceInterface.ReviewService {
 
 	return &reviewService{
 		reviewRepository: reviewRepository,

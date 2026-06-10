@@ -5,6 +5,7 @@ import (
 
 	profileDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/profile"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	"github.com/google/uuid"
 )
 
@@ -14,7 +15,7 @@ type profileService struct {
 
 func NewProfileService(
 	userRepository repositoryInterfaces.UserRepository,
-) repositoryInterfaces.ProfileService {
+) serviceInterface.ProfileService {
 	return &profileService{
 		userRepository: userRepository,
 	}

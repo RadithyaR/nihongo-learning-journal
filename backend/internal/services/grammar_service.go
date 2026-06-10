@@ -7,6 +7,7 @@ import (
 	grammarDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/grammar"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -18,7 +19,7 @@ type grammarService struct {
 
 func NewGrammarService(
 	grammarRepository repositoryInterfaces.GrammarRepository,
-) repositoryInterfaces.GrammarService {
+) serviceInterface.GrammarService {
 
 	return &grammarService{
 		grammarRepository: grammarRepository,

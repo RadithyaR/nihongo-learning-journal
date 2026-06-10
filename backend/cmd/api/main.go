@@ -55,6 +55,9 @@ func main() {
 	goalRepository :=
 	repositories.NewGoalRepository(database.DB)
 
+	dashboardRepository := 
+	repositories.NewDashboardRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -88,6 +91,8 @@ func main() {
 
 	goalService := services.NewGoalService(goalRepository)
 
+	dashboardService := services.NewDashboardService(dashboardRepository)
+
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -104,6 +109,8 @@ func main() {
 	studySessionHandler := handlers.NewStudySessionHandler(studySessionService)
 
 	goalHandler := handlers.NewGoalHandler(goalService)
+
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 
 	//route
 	api := r.Group("/api/v1")	
@@ -123,6 +130,8 @@ func main() {
 	routes.StudySessionRoute(api, studySessionHandler)
 
 	routes.GoalRoute(api, goalHandler)
+
+	routes.DashboardRoute(api, dashboardHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
