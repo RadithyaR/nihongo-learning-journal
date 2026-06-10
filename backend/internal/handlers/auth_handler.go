@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	authDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/auth"
-	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
 	appValidator "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/validator"

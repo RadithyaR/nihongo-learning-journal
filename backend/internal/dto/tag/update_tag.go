@@ -1,0 +1,6 @@
+package tag
+
+type UpdateTagRequest struct {
+	Name  string  `json:"name" validate:"required,max=100"`
+	Color *string `json:"color"`
+}
