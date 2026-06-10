@@ -6,6 +6,7 @@ import (
 	vocabularyDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/vocabulary"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -17,7 +18,7 @@ type vocabularyService struct {
 
 func NewVocabularyService(
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
-) repositoryInterfaces.VocabularyService {
+) serviceInterface.VocabularyService {
 	return &vocabularyService{
 		vocabularyRepository: vocabularyRepository,
 	}

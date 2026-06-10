@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	profileDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/profile"
-	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
 	appValidator "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/validator"
 	"github.com/gin-gonic/gin"

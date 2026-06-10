@@ -8,6 +8,7 @@ import (
 	studySessionDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/studySession"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ func NewStudySessionService(
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
 	kanjiRepository repositoryInterfaces.KanjiRepository,
 	grammarRepository repositoryInterfaces.GrammarRepository,
-) repositoryInterfaces.StudySessionService {
+) serviceInterface.StudySessionService {
 
 	return &studySessionService{
 		studySessionRepository: studySessionRepository,

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	studySessionDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/studySession"
-	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
 	"github.com/gin-gonic/gin"
 )

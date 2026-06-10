@@ -9,6 +9,7 @@ import (
 	goalDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/goal"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -20,7 +21,7 @@ type goalService struct {
 
 func NewGoalService(
 	goalRepository repositoryInterfaces.GoalRepository,
-) repositoryInterfaces.GoalService {
+) serviceInterface.GoalService {
 
 	return &goalService{
 		goalRepository: goalRepository,
