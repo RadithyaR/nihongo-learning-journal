@@ -58,6 +58,12 @@ func main() {
 	dashboardRepository := 
 	repositories.NewDashboardRepository(database.DB)
 
+	tagRepository := 
+	repositories.NewTagRepository(database.DB)
+
+	taggableRepository :=
+	repositories.NewTaggableRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -93,6 +99,16 @@ func main() {
 
 	dashboardService := services.NewDashboardService(dashboardRepository)
 
+	tagService := services.NewTagService(tagRepository)
+
+	taggableService := services.NewTaggableService(
+		taggableRepository,
+		tagRepository,
+		vocabularyRepository,
+		kanjiRepository,
+		grammarRepository,
+	)
+
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -111,6 +127,10 @@ func main() {
 	goalHandler := handlers.NewGoalHandler(goalService)
 
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+
+	tagHandler := handlers.NewTagHandler(tagService)
+
+	taggableHandler := handlers.NewTaggableHandler(taggableService)
 
 	//route
 	api := r.Group("/api/v1")	
@@ -132,6 +152,8 @@ func main() {
 	routes.GoalRoute(api, goalHandler)
 
 	routes.DashboardRoute(api, dashboardHandler)
+
+	routes.TagRoute(api, tagHandler, taggableHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }

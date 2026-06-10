@@ -12,6 +12,7 @@ import (
 	authDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/auth"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
+	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	"github.com/google/uuid"
 
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
@@ -34,7 +35,7 @@ func NewAuthService(
 	userSessionRepository repositoryInterfaces.UserSessionRepository,
 	emailVerificationRepository repositoryInterfaces.EmailVerificationRepository,
 	passwordResetRepository repositoryInterfaces.PasswordResetRepository,
-) repositoryInterfaces.AuthService {
+) serviceInterfaces.AuthService {
 	return &authService{
 		userRepository:        userRepository,
 		userSessionRepository: userSessionRepository,
