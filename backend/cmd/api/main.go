@@ -52,6 +52,9 @@ func main() {
 	studySessionRepository :=
 	repositories.NewStudySessionRepository(database.DB)
 
+	srsRepository :=
+	repositories.NewSRSRepository(database.DB)
+
 	goalRepository :=
 	repositories.NewGoalRepository(database.DB)
 
@@ -83,12 +86,15 @@ func main() {
 	grammarRepository,
 )
 
+	srsService := services.NewSRSService(srsRepository)
+
 	reviewService := services.NewReviewService(
 		reviewRepository,
 		vocabularyRepository,
 		kanjiRepository,
 		grammarRepository,
 		studySessionService,
+		srsService,
 	)
 
 	kanjiService := services.NewKanjiService(kanjiRepository)
@@ -97,7 +103,10 @@ func main() {
 
 	goalService := services.NewGoalService(goalRepository)
 
-	dashboardService := services.NewDashboardService(dashboardRepository)
+	dashboardService := services.NewDashboardService(
+		dashboardRepository,
+		srsService,
+	)
 
 	tagService := services.NewTagService(tagRepository)
 

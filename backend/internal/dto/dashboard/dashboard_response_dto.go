@@ -24,5 +24,8 @@ type DashboardResponse struct {
 	ActiveGoals    int `json:"activeGoals"`
 	CompletedGoals int `json:"completedGoals"`
 
+	DueToday int `json:"dueToday"`
+	Overdue int `json:"overdue"`
+
 	RecentSessions []RecentSessionResponse `json:"recentSessions"`
 }
