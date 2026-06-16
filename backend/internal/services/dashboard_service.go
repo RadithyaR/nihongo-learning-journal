@@ -11,13 +11,16 @@ import (
 
 type dashboardService struct {
 	dashboardRepo repositoryInterface.DashboardRepository
+	srsService serviceInterface.SRSService
 }
 
 func NewDashboardService(
 	dashboardRepo repositoryInterface.DashboardRepository,
+	srsService serviceInterface.SRSService,
 ) serviceInterface.DashboardService {
 	return &dashboardService{
 		dashboardRepo: dashboardRepo,
+		srsService: srsService,
 	}
 }
 
@@ -74,6 +77,24 @@ func (s *dashboardService) GetDashboard(
 		return nil, err
 	}
 
+	dueToday, err := s.srsService.GetDueCount(
+		ctx,
+		userID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	overdue, err := s.srsService.GetOverdueCount(
+		ctx,
+		userID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
 	recentSessions, err := s.dashboardRepo.GetRecentSessions(
 		ctx,
 		userID,
@@ -112,6 +133,9 @@ func (s *dashboardService) GetDashboard(
 
 		ActiveGoals:    int(activeGoals),
 		CompletedGoals: int(completedGoals),
+
+		DueToday: int(dueToday),
+		Overdue: int(overdue),
 
 		RecentSessions: sessionResponses,
 	}, nil

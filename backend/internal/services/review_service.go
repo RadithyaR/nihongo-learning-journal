@@ -11,6 +11,7 @@ import (
 	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type reviewService struct {
@@ -19,6 +20,7 @@ type reviewService struct {
 	kanjiRepository repositoryInterfaces.KanjiRepository
 	grammarRepository repositoryInterfaces.GrammarRepository
 	studySessionService serviceInterface.StudySessionService
+	srsService serviceInterface.SRSService
 }
 
 func NewReviewService(
@@ -27,6 +29,7 @@ func NewReviewService(
 	kanjiRepository repositoryInterfaces.KanjiRepository,
 	grammarRepository repositoryInterfaces.GrammarRepository,
 	studySessionService serviceInterface.StudySessionService,
+	srsService serviceInterface.SRSService,
 ) serviceInterface.ReviewService {
 
 	return &reviewService{
@@ -35,6 +38,7 @@ func NewReviewService(
 		kanjiRepository: kanjiRepository,
 		grammarRepository: grammarRepository,
 		studySessionService: studySessionService,
+		srsService: srsService,
 	}
 }
 
@@ -43,19 +47,45 @@ func (s *reviewService) GetNextReview(
 	userID uuid.UUID,
 ) (*reviewDTO.NextReviewResponse, error) {
 
-	vocabulary, err :=
-		s.vocabularyRepository.FindRandomByUserID(
+	record, err := s.srsService.GetNextDueItem(
+		ctx,
+		userID,
+		constants.ReviewTypeVocabulary,
+	)
+
+	if err == nil {
+
+		vocabulary, err := s.vocabularyRepository.FindByID(
 			ctx,
-			userID,
+			record.ItemID,
 		)
+
+		if err == nil {
+
+			return &reviewDTO.NextReviewResponse{
+				ID:      vocabulary.ID,
+				Word:    vocabulary.Word,
+				Reading: vocabulary.Reading,
+			}, nil
+		}
+	}
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	vocabulary, err := s.vocabularyRepository.FindRandomByUserID(
+		ctx,
+		userID,
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &reviewDTO.NextReviewResponse{
-		ID: vocabulary.ID,
-		Word: vocabulary.Word,
+		ID:      vocabulary.ID,
+		Word:    vocabulary.Word,
 		Reading: vocabulary.Reading,
 	}, nil
 }
@@ -93,6 +123,14 @@ func (s *reviewService) SubmitReview(
 		&review,
 	)
 
+		err = s.srsService.UpdateReview(
+		ctx,
+		userID,
+		constants.ReviewTypeVocabulary,
+		dto.ItemID,
+		dto.Rating,
+	)
+
 	if err != nil {
 		return err
 	}
@@ -109,11 +147,39 @@ func (s *reviewService) GetNextKanjiReview(
 	userID uuid.UUID,
 ) (*reviewDTO.NextKanjiReviewResponse, error) {
 
-	kanji, err :=
-		s.kanjiRepository.FindRandomByUserID(
+	record, err := s.srsService.GetNextDueItem(
+		ctx,
+		userID,
+		constants.ReviewTypeKanji,
+	)
+
+	if err == nil {
+
+		kanji, err := s.kanjiRepository.FindByID(
 			ctx,
-			userID,
+			record.ItemID,
 		)
+
+		if err == nil {
+
+			return &reviewDTO.NextKanjiReviewResponse{
+				ID:        kanji.ID,
+				Character: kanji.Character,
+				Meaning:   kanji.Meaning,
+				Onyomi:    kanji.Onyomi,
+				Kunyomi:   kanji.Kunyomi,
+			}, nil
+		}
+	}
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	kanji, err := s.kanjiRepository.FindRandomByUserID(
+		ctx,
+		userID,
+	)
 
 	if err != nil {
 		return nil, err
@@ -161,6 +227,14 @@ func (s *reviewService) SubmitKanjiReview(
 		&review,
 	)
 
+	err = s.srsService.UpdateReview(
+		ctx,
+		userID,
+		constants.ReviewTypeKanji,
+		dto.ItemID,
+		dto.Rating,
+	)
+
 	if err != nil {
 		return err
 	}
@@ -177,18 +251,44 @@ func (s *reviewService) GetNextGrammarReview(
 	userID uuid.UUID,
 ) (*reviewDTO.NextGrammarReviewResponse, error) {
 
-	grammar, err :=
-		s.grammarRepository.FindRandomByUserID(
+	record, err := s.srsService.GetNextDueItem(
+		ctx,
+		userID,
+		constants.ReviewTypeGrammar,
+	)
+
+	if err == nil {
+
+		grammar, err := s.grammarRepository.FindByID(
 			ctx,
-			userID,
+			record.ItemID,
 		)
+
+		if err == nil {
+
+			return &reviewDTO.NextGrammarReviewResponse{
+				ID:      grammar.ID,
+				Pattern: grammar.Pattern,
+				Meaning: grammar.Meaning,
+			}, nil
+		}
+	}
+
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return nil, err
+	}
+
+	grammar, err := s.grammarRepository.FindRandomByUserID(
+		ctx,
+		userID,
+	)
 
 	if err != nil {
 		return nil, err
 	}
 
 	return &reviewDTO.NextGrammarReviewResponse{
-		ID: grammar.ID,
+		ID:      grammar.ID,
 		Pattern: grammar.Pattern,
 		Meaning: grammar.Meaning,
 	}, nil
@@ -224,6 +324,14 @@ func (s *reviewService) SubmitGrammarReview(
 	err = s.reviewRepository.Create(
 		ctx,
 		&review,
+	)
+
+	err = s.srsService.UpdateReview(
+		ctx,
+		userID,
+		constants.ReviewTypeGrammar,
+		dto.GrammarID,
+		dto.Rating,
 	)
 
 	if err != nil {
