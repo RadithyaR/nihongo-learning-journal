@@ -67,6 +67,9 @@ func main() {
 	taggableRepository :=
 	repositories.NewTaggableRepository(database.DB)
 
+	analyticsRepository :=
+	repositories.NewAnalyticsRepository(database.DB)
+
 	//service
 	authService := services.NewAuthService(
 		userRepository,
@@ -118,6 +121,8 @@ func main() {
 		grammarRepository,
 	)
 
+	analyticsService := services.NewAnalyticsService(analyticsRepository)
+
 	//handler
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -141,6 +146,8 @@ func main() {
 
 	taggableHandler := handlers.NewTaggableHandler(taggableService)
 
+	analyticsHandler := handlers.NewAnalyticsHandler(analyticsService)
+
 	//route
 	api := r.Group("/api/v1")	
 
@@ -163,6 +170,8 @@ func main() {
 	routes.DashboardRoute(api, dashboardHandler)
 
 	routes.TagRoute(api, tagHandler, taggableHandler)
+
+	routes.AnalyticsRoute(api, analyticsHandler)
 
 	r.Run(fmt.Sprintf(":%d", port))
 }
