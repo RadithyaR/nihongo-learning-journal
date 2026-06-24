@@ -36,6 +36,7 @@ func (s *grammarService) mapGrammarResponse(
 		Meaning: grammar.Meaning,
 		Example: grammar.Example,
 		Note: grammar.Note,
+		ImageURL: grammar.ImageURL,
 		Favourite: grammar.Favourite,
 	}
 }
@@ -68,6 +69,7 @@ func (s *grammarService) CreateGrammar(
 		Meaning: dto.Meaning,
 		Example: dto.Example,
 		Note: dto.Note,
+		ImageURL: dto.ImageURL,
 	}
 
 	if err := s.grammarRepository.Create(
@@ -182,6 +184,7 @@ func (s *grammarService) UpdateGrammar(
 	grammar.Meaning = dto.Meaning
 	grammar.Example = dto.Example
 	grammar.Note = dto.Note
+	grammar.ImageURL = dto.ImageURL
 
 	err = s.grammarRepository.Update(
 		ctx,

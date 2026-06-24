@@ -15,7 +15,7 @@ interface AuthState {
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
   setTokens: (accessToken: string, refreshToken: string) => void;
   setUser: (user: User) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -32,6 +32,13 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setUser: (user) => set({ user }),
 
-  logout: () =>
-    set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
+  logout: async () => {
+    try {
+      const { api } = await import('@/lib/axios');
+      await api.post('/auth/logout');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+    set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
+  },
 }));

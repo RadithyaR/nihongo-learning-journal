@@ -5,15 +5,17 @@ import "github.com/google/uuid"
 type CreateGrammarRequest struct {
 	Pattern string  `json:"pattern" validate:"required"`
 	Meaning *string `json:"meaning"`
-	Example *string `json:"example"`
-	Note    *string `json:"note"`
+	Example  *string `json:"example"`
+	Note     *string `json:"note"`
+	ImageURL *string `json:"image_url"`
 }
 
 type UpdateGrammarRequest struct {
 	Pattern string  `json:"pattern" validate:"required"`
 	Meaning *string `json:"meaning"`
-	Example *string `json:"example"`
-	Note    *string `json:"note"`
+	Example  *string `json:"example"`
+	Note     *string `json:"note"`
+	ImageURL *string `json:"image_url"`
 }
 
 type GrammarResponse struct {
@@ -22,5 +24,6 @@ type GrammarResponse struct {
 	Meaning   *string   `json:"meaning"`
 	Example   *string   `json:"example"`
 	Note      *string   `json:"note"`
+	ImageURL  *string   `json:"image_url"`
 	Favourite bool      `json:"favourite"`
 }

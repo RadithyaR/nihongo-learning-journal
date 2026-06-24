@@ -4,7 +4,9 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { Loader2, User as UserIcon } from "lucide-react"
+import { Loader2, User as UserIcon, Upload } from "lucide-react"
+import { v4 as uuidv4 } from "uuid"
+import { supabase } from "@/lib/supabase"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -38,6 +40,7 @@ export default function ProfilePage() {
   
   const [profileMsg, setProfileMsg] = useState({ type: "", text: "" })
   const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" })
+  const [isUploading, setIsUploading] = useState(false)
 
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -50,6 +53,50 @@ export default function ProfilePage() {
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
     resolver: zodResolver(passwordSchema),
   })
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      setProfileMsg({ type: "error", text: "Image size must be less than 5MB" })
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setProfileMsg({ type: "error", text: "File must be an image" })
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      setProfileMsg({ type: "", text: "" })
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user?.id || 'user'}-${uuidv4()}.${fileExt}`
+      // The bucket is already 'avatars', so we don't need the 'avatars/' prefix in the path
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      profileForm.setValue('avatar_url', data.publicUrl)
+      setProfileMsg({ type: "success", text: "Image uploaded! Click 'Save Changes' to apply." })
+    } catch (error: any) {
+      setProfileMsg({ type: "error", text: error.message || "Failed to upload image" })
+    } finally {
+      setIsUploading(false)
+    }
+  }
 
   const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
     setProfileMsg({ type: "", text: "" })
@@ -123,8 +170,21 @@ export default function ProfilePage() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="avatar_url">Avatar URL (Optional)</Label>
-                <Input id="avatar_url" placeholder="https://example.com/avatar.png" {...profileForm.register("avatar_url")} />
+                <Label htmlFor="avatar_url">Profile Photo (Max 5MB)</Label>
+                <div className="flex items-center gap-4">
+                  <Input 
+                    id="avatar_upload" 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleAvatarUpload} 
+                    disabled={isUploading || profileForm.formState.isSubmitting}
+                    className="cursor-pointer"
+                  />
+                  {isUploading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                </div>
+                {/* Hidden input to store the uploaded URL for form submission */}
+                <input type="hidden" {...profileForm.register("avatar_url")} />
+                
                 {profileForm.formState.errors.avatar_url && (
                   <p className="text-sm text-destructive">{profileForm.formState.errors.avatar_url.message}</p>
                 )}

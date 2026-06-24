@@ -24,6 +24,8 @@ export function Navbar() {
     { href: "/kanji", label: "Kanji" },
     { href: "/grammar", label: "Grammar" },
     { href: "/review", label: "Review" },
+    { href: "/goals", label: "Goals" },
+    { href: "/tags", label: "Tags" },
   ]
 
   return (

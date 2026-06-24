@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react"
 import { api } from "@/lib/axios"
-import { Plus, Search, Edit, Trash2, Heart, Loader2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Heart, Loader2, ImageIcon, Upload, X } from "lucide-react"
+import { v4 as uuidv4 } from "uuid"
+import { supabase } from "@/lib/supabase"
+import { useAuthStore } from "@/store/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,13 +38,17 @@ interface Grammar {
   source?: string
   jlpt_level?: string
   status?: string
+  image_url?: string
   favourite: boolean
 }
 
 export default function GrammarPage() {
+  const { user } = useAuthStore()
   const [grammars, setGrammars] = useState<Grammar[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+
+  const [viewImageUrl, setViewImageUrl] = useState<string | null>(null)
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -51,9 +58,12 @@ export default function GrammarPage() {
     example: "",
     note: "",
     source: "",
-    jlpt_level: ""
+    jlpt_level: "",
+    image_url: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
 
   const fetchGrammars = async (query = "") => {
     setLoading(true)
@@ -103,7 +113,8 @@ export default function GrammarPage() {
       example: grammar.example || "",
       note: grammar.note || "",
       source: grammar.source || "",
-      jlpt_level: grammar.jlpt_level || ""
+      jlpt_level: grammar.jlpt_level || "",
+      image_url: grammar.image_url || ""
     })
     setEditId(grammar.id)
     setIsDialogOpen(true)
@@ -113,7 +124,8 @@ export default function GrammarPage() {
     setIsDialogOpen(open)
     if (!open) {
       setEditId(null)
-      setFormData({ pattern: "", meaning: "", example: "", note: "", source: "", jlpt_level: "" })
+      setFormData({ pattern: "", meaning: "", example: "", note: "", source: "", jlpt_level: "", image_url: "" })
+      setUploadError("")
     }
   }
 
@@ -128,12 +140,55 @@ export default function GrammarPage() {
       }
       setIsDialogOpen(false)
       setEditId(null)
-      setFormData({ pattern: "", meaning: "", example: "", note: "", source: "", jlpt_level: "" })
+      setFormData({ pattern: "", meaning: "", example: "", note: "", source: "", jlpt_level: "", image_url: "" })
       fetchGrammars(search)
     } catch (err) {
       console.error("Failed to save", err)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadError("")
+
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("Image size must be less than 10MB")
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError("File must be an image")
+      return
+    }
+
+    try {
+      setIsUploading(true)
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user?.id || 'user'}-${uuidv4()}.${fileExt}`
+      const filePath = `${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('grammar_notes')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data } = supabase.storage
+        .from('grammar_notes')
+        .getPublicUrl(filePath)
+
+      setFormData(prev => ({ ...prev, image_url: data.publicUrl }))
+    } catch (error: any) {
+      setUploadError(error.message || "Failed to upload image")
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -214,7 +269,38 @@ export default function GrammarPage() {
                   />
                 </div>
               </div>
-              <DialogFooter>
+              <div className="space-y-2">
+                <Label htmlFor="image_upload">Attached Note / Image (Max 10MB)</Label>
+                {formData.image_url ? (
+                  <div className="relative mt-2 w-full h-40 bg-muted rounded-md overflow-hidden border">
+                    <img src={formData.image_url} alt="Note Attachment" className="w-full h-full object-contain" />
+                    <Button 
+                      type="button" 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                      onClick={() => setFormData({...formData, image_url: ""})}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4 mt-2">
+                    <Input 
+                      id="image_upload" 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageUpload} 
+                      disabled={isUploading || isSubmitting}
+                      className="cursor-pointer"
+                    />
+                    {isUploading && <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />}
+                  </div>
+                )}
+                {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
+              </div>
+
+              <DialogFooter className="mt-6">
                 <Button type="submit" disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Save Item
@@ -243,6 +329,7 @@ export default function GrammarPage() {
               <TableHead>Pattern</TableHead>
               <TableHead>Meaning</TableHead>
               <TableHead>Example</TableHead>
+              <TableHead className="w-[60px] text-center"><ImageIcon className="h-4 w-4 mx-auto text-muted-foreground"/></TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -256,7 +343,7 @@ export default function GrammarPage() {
               </TableRow>
             ) : grammars.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   No Grammar patterns found.
                 </TableCell>
               </TableRow>
@@ -274,6 +361,17 @@ export default function GrammarPage() {
                   <TableCell className="font-bold text-lg">{item.pattern}</TableCell>
                   <TableCell>{item.meaning}</TableCell>
                   <TableCell className="text-muted-foreground italic truncate max-w-xs">{item.example || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {item.image_url && (
+                      <button 
+                        onClick={() => setViewImageUrl(item.image_url!)} 
+                        className="inline-flex hover:bg-muted p-1.5 rounded text-primary transition-colors cursor-pointer"
+                        title="View Attached Note"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       {item.status || "NEW"}
@@ -293,6 +391,29 @@ export default function GrammarPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={!!viewImageUrl} onOpenChange={(open) => !open && setViewImageUrl(null)}>
+        <DialogContent className="sm:max-w-3xl border-0 p-1 bg-transparent shadow-none">
+          <div className="relative w-full rounded-md overflow-hidden bg-black/90 flex items-center justify-center min-h-[300px]">
+            {viewImageUrl && (
+              <img 
+                src={viewImageUrl} 
+                alt="Grammar Note Attachment" 
+                className="max-w-full max-h-[80vh] object-contain"
+              />
+            )}
+            <Button 
+              type="button" 
+              variant="secondary" 
+              size="icon" 
+              className="absolute top-2 right-2 h-8 w-8 rounded-full opacity-70 hover:opacity-100"
+              onClick={() => setViewImageUrl(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
