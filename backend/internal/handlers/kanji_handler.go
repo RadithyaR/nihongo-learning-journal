@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	kanjiDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/kanji"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
@@ -126,12 +127,26 @@ func (h *KanjiHandler) GetKanjiList(
 		return
 	}
 
-	search := c.Query("search")
+	filter := models.ListFilter{
+		Search: c.Query("search"),
+		SortBy: c.Query("sort"),
+	}
+
+	if favStr := c.Query("favourite"); favStr != "" {
+		fav := favStr == "true"
+		filter.Favourite = &fav
+	}
+
+	if tagIDStr := c.Query("tagId"); tagIDStr != "" {
+		if tagID, err := uuid.Parse(tagIDStr); err == nil {
+			filter.TagID = &tagID
+		}
+	}
 
 	kanjis, err := h.kanjiService.GetKanjiList(
 		c.Request.Context(),
 		userID,
-		search,
+		filter,
 	)
 
 	if err != nil {

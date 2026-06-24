@@ -11,7 +11,7 @@ type ReviewService interface {
 	GetNextReview(
 		ctx context.Context,
 		userID uuid.UUID,
-	) (*reviewDTO.NextReviewResponse, error)
+	) (*reviewDTO.NextReviewResult, error)
 
 	SubmitReview(
 		ctx context.Context,
@@ -21,7 +21,7 @@ type ReviewService interface {
 	GetNextKanjiReview(
 		ctx context.Context,
 		userID uuid.UUID,
-	) (*reviewDTO.NextKanjiReviewResponse, error)
+	) (*reviewDTO.NextKanjiReviewResult, error)
 
 	SubmitKanjiReview(
 		ctx context.Context,
@@ -31,7 +31,7 @@ type ReviewService interface {
 	GetNextGrammarReview(
 		ctx context.Context,
 		userID uuid.UUID,
-	) (*reviewDTO.NextGrammarReviewResponse, error)
+	) (*reviewDTO.NextGrammarReviewResult, error)
 
 	SubmitGrammarReview(
 		ctx context.Context,

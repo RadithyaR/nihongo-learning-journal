@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	vocabularyDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/vocabulary"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
@@ -112,13 +113,28 @@ if !ok {
 		)
 		return
 	}
-	search := c.Query("search")
+
+	filter := models.ListFilter{
+		Search: c.Query("search"),
+		SortBy: c.Query("sort"),
+	}
+
+	if favStr := c.Query("favourite"); favStr != "" {
+		fav := favStr == "true"
+		filter.Favourite = &fav
+	}
+
+	if tagIDStr := c.Query("tagId"); tagIDStr != "" {
+		if tagID, err := uuid.Parse(tagIDStr); err == nil {
+			filter.TagID = &tagID
+		}
+	}
 
 	vocabularies, err :=
 		h.vocabularyService.GetVocabularyList(
 			c.Request.Context(),
 			userID,
-			search,
+			filter,
 		)
 
 	if err != nil {

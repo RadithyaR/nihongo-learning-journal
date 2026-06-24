@@ -19,6 +19,7 @@ import (
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/hash"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/jwt"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/email"
 
 	"gorm.io/gorm"
 )
@@ -28,6 +29,7 @@ type authService struct {
 	userSessionRepository repositoryInterfaces.UserSessionRepository
 	emailVerificationRepository repositoryInterfaces.EmailVerificationRepository
 	passwordResetRepository repositoryInterfaces.PasswordResetRepository
+	emailService email.EmailService
 }
 
 func NewAuthService(
@@ -35,12 +37,14 @@ func NewAuthService(
 	userSessionRepository repositoryInterfaces.UserSessionRepository,
 	emailVerificationRepository repositoryInterfaces.EmailVerificationRepository,
 	passwordResetRepository repositoryInterfaces.PasswordResetRepository,
+	emailService email.EmailService,
 ) serviceInterfaces.AuthService {
 	return &authService{
 		userRepository:        userRepository,
 		userSessionRepository: userSessionRepository,
 		emailVerificationRepository: emailVerificationRepository,
 		passwordResetRepository: passwordResetRepository,
+		emailService: emailService,
 	}
 }
 
@@ -106,6 +110,9 @@ func (s *authService) Register(
 	if err != nil {
 		return nil, err
 	}
+
+	// Send verification email
+	go s.emailService.SendVerificationEmail(user.Email, token)
 
 	return &responses.UserResponse{
 		ID:        user.ID,
@@ -525,6 +532,9 @@ func (s *authService) ForgotPassword(
 	if err != nil {
 		return "", err
 	}
+
+	// Send password reset email
+	go s.emailService.SendPasswordResetEmail(user.Email, token)
 
 	return token, nil
 }

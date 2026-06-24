@@ -116,31 +116,14 @@ func (s *kanjiService) GetKanjiByID(
 func (s *kanjiService) GetKanjiList(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]kanjiDTO.KanjiResponse, error) {
 
-	var (
-		kanjis []models.Kanji
-		err error
+	kanjis, err := s.kanjiRepository.FindFiltered(
+		ctx,
+		userID,
+		filter,
 	)
-
-	if search != "" {
-
-		kanjis, err =
-			s.kanjiRepository.SearchByUserID(
-				ctx,
-				userID,
-				search,
-			)
-
-	} else {
-
-		kanjis, err =
-			s.kanjiRepository.FindAllByUserID(
-				ctx,
-				userID,
-			)
-	}
 
 	if err != nil {
 		return nil, err

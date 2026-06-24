@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	grammarDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/grammar"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	serviceInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
 	customErrors "github.com/RadithyaR/nihongo-learning-journal/backend/pkg/errors"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/responses"
@@ -112,12 +113,26 @@ func (h *GrammarHandler) GetGrammarList(
 		return
 	}
 
-	search := c.Query("search")
+	filter := models.ListFilter{
+		Search: c.Query("search"),
+		SortBy: c.Query("sort"),
+	}
+
+	if favStr := c.Query("favourite"); favStr != "" {
+		fav := favStr == "true"
+		filter.Favourite = &fav
+	}
+
+	if tagIDStr := c.Query("tagId"); tagIDStr != "" {
+		if tagID, err := uuid.Parse(tagIDStr); err == nil {
+			filter.TagID = &tagID
+		}
+	}
 
 	grammars, err := h.grammarService.GetGrammarList(
 		c.Request.Context(),
 		userID,
-		search,
+		filter,
 	)
 
 	if err != nil {

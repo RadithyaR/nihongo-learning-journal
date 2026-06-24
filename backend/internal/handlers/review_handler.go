@@ -38,12 +38,16 @@ func (h *ReviewHandler) GetNextReview(
 		return
 	}
 
-	review, err := h.reviewService.GetNextReview(
+	result, err := h.reviewService.GetNextReview(
 		c.Request.Context(),
 		userID,
 	)
 
 	if err != nil {
+		if err.Error() == "vocabulary not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any vocabulary yet")
+			return
+		}
 
 		responses.Error(
 			c,
@@ -58,7 +62,7 @@ func (h *ReviewHandler) GetNextReview(
 		c,
 		http.StatusOK,
 		"next review retrieved successfully",
-		review,
+		result,
 	)
 }
 
@@ -144,12 +148,16 @@ func (h *ReviewHandler) GetNextKanjiReview(
 		return
 	}
 
-	review, err := h.reviewService.GetNextKanjiReview(
+	result, err := h.reviewService.GetNextKanjiReview(
 		c.Request.Context(),
 		userID,
 	)
 
 	if err != nil {
+		if err.Error() == "kanji not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any kanji yet")
+			return
+		}
 
 		responses.Error(
 			c,
@@ -164,7 +172,7 @@ func (h *ReviewHandler) GetNextKanjiReview(
 		c,
 		http.StatusOK,
 		"next review retrieved successfully",
-		review,
+		result,
 	)
 }
 
@@ -257,7 +265,10 @@ func (h *ReviewHandler) GetNextGrammarReview(
 		)
 
 	if err != nil {
-
+		if err.Error() == "grammar not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any grammar yet")
+			return
+		}
 		responses.Error(
 			c,
 			http.StatusInternalServerError,

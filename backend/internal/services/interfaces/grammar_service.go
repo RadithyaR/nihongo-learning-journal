@@ -4,6 +4,7 @@ import (
 	"context"
 
 	grammarDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/grammar"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ type GrammarService interface {
 	GetGrammarList(
 		ctx context.Context,
 		userID uuid.UUID,
-		search string,
+		filter models.ListFilter,
 	) ([]grammarDTO.GrammarResponse, error)
 
 	UpdateGrammar(

@@ -136,22 +136,43 @@ func (r *vocabularyRepository) Delete(
 	).Error
 }
 
-func (r *vocabularyRepository) SearchByUserID(
+func (r *vocabularyRepository) FindFiltered(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]models.Vocabulary, error) {
 
 	var vocabularies []models.Vocabulary
 
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Preload("Meanings").
-		Where(
-			"user_id = ? AND word ILIKE ?",
-			userID,
-			"%"+search+"%",
-		).
-		Find(&vocabularies).Error
+		Where("user_id = ?", userID)
+
+	if filter.Search != "" {
+		query = query.Where("word ILIKE ?", "%"+filter.Search+"%")
+	}
+
+	if filter.Favourite != nil {
+		query = query.Where("favourite = ?", *filter.Favourite)
+	}
+
+	if filter.TagID != nil {
+		query = query.Joins(
+			"JOIN taggables ON taggables.item_id = vocabularies.id AND taggables.deleted_at IS NULL",
+		).Where(
+			"taggables.tag_id = ? AND taggables.item_type = 'VOCABULARY'",
+			*filter.TagID,
+		)
+	}
+
+	switch filter.SortBy {
+	case "oldest":
+		query = query.Order("created_at ASC")
+	default:
+		query = query.Order("created_at DESC")
+	}
+
+	err := query.Find(&vocabularies).Error
 
 	if err != nil {
 		return nil, err

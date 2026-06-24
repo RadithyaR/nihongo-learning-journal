@@ -29,10 +29,10 @@ type GrammarRepository interface {
 		userID uuid.UUID,
 	) ([]models.Grammar, error)
 
-	SearchByUserID(
+	FindFiltered(
 		ctx context.Context,
 		userID uuid.UUID,
-		search string,
+		filter models.ListFilter,
 	) ([]models.Grammar, error)
 
 	Update(

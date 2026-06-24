@@ -36,6 +36,7 @@ func (s *grammarService) mapGrammarResponse(
 		Meaning: grammar.Meaning,
 		Example: grammar.Example,
 		Note: grammar.Note,
+		ImageURL: grammar.ImageURL,
 		Favourite: grammar.Favourite,
 	}
 }
@@ -68,6 +69,7 @@ func (s *grammarService) CreateGrammar(
 		Meaning: dto.Meaning,
 		Example: dto.Example,
 		Note: dto.Note,
+		ImageURL: dto.ImageURL,
 	}
 
 	if err := s.grammarRepository.Create(
@@ -109,31 +111,14 @@ func (s *grammarService) GetGrammarByID(
 func (s *grammarService) GetGrammarList(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]grammarDTO.GrammarResponse, error) {
 
-	var (
-		grammars []models.Grammar
-		err error
+	grammars, err := s.grammarRepository.FindFiltered(
+		ctx,
+		userID,
+		filter,
 	)
-
-	if search != "" {
-
-		grammars, err =
-			s.grammarRepository.SearchByUserID(
-				ctx,
-				userID,
-				search,
-			)
-
-	} else {
-
-		grammars, err =
-			s.grammarRepository.FindAllByUserID(
-				ctx,
-				userID,
-			)
-	}
 
 	if err != nil {
 		return nil, err
@@ -182,6 +167,7 @@ func (s *grammarService) UpdateGrammar(
 	grammar.Meaning = dto.Meaning
 	grammar.Example = dto.Example
 	grammar.Note = dto.Note
+	grammar.ImageURL = dto.ImageURL
 
 	err = s.grammarRepository.Update(
 		ctx,

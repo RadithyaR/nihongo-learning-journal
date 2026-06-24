@@ -10,6 +10,7 @@ type Grammar struct {
 	Meaning *string
 	Example *string
 	Note *string
+	ImageURL *string
 	Favourite bool `gorm:"default:false"`
 	BaseModel
 }

@@ -10,7 +10,9 @@ import (
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/routes"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/services"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/email"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/pkg/validator"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,6 +21,16 @@ func main() {
 	database.Connect();
 	validator.Init()
 	r := gin.Default();
+	
+	// Setup CORS
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	port := 8000
 
 	r.GET("/health", func(c *gin.Context) {
@@ -71,11 +83,14 @@ func main() {
 	repositories.NewAnalyticsRepository(database.DB)
 
 	//service
+	emailService := email.NewEmailService()
+
 	authService := services.NewAuthService(
 		userRepository,
 		userSessionRepository,
 		emailVerificationRepository,
 		passwordResetRepository,
+		emailService,
 	)
 
 	profileService := services.NewProfileService(userRepository)
