@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { api } from "@/lib/axios"
-import { Plus, Edit, Trash2, Loader2, Tag, Palette } from "lucide-react"
+import { useEffect, useState } from "react";
+import { api } from "@/lib/axios";
+import { Plus, Edit, Trash2, Loader2, Tag, Palette } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 interface TagItem {
-  id: string
-  name: string
-  color?: string | null
-  createdAt: string
-  updatedAt: string
+  id: string;
+  name: string;
+  color?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const PRESET_COLORS = [
@@ -42,95 +42,102 @@ const PRESET_COLORS = [
   "#ec4899", // pink
   "#f43f5e", // rose
   "#78716c", // stone
-]
+];
 
 export default function TagsPage() {
-  const [tags, setTags] = useState<TagItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [tags, setTags] = useState<TagItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editId, setEditId] = useState<string | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     color: "#3b82f6",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchTags = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await api.get("/tags")
-      setTags(response.data.data || [])
+      const response = await api.get("/tags");
+      setTags(response.data.data || []);
     } catch (err) {
-      console.error("Failed to load tags", err)
+      console.error("Failed to load tags", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchTags()
-  }, [])
+    fetchTags();
+  }, []);
 
   const deleteTag = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this tag? It will be removed from all items.")) return
+    if (
+      !confirm(
+        "Are you sure you want to delete this tag? It will be removed from all items.",
+      )
+    )
+      return;
 
     try {
-      await api.delete(`/tags/${id}`)
-      setTags(tags.filter(t => t.id !== id))
+      await api.delete(`/tags/${id}`);
+      setTags(tags.filter((t) => t.id !== id));
     } catch (err) {
-      console.error("Failed to delete tag", err)
+      console.error("Failed to delete tag", err);
     }
-  }
+  };
 
   const openEdit = (tag: TagItem) => {
     setFormData({
       name: tag.name,
       color: tag.color || "#3b82f6",
-    })
-    setEditId(tag.id)
-    setIsDialogOpen(true)
-  }
+    });
+    setEditId(tag.id);
+    setIsDialogOpen(true);
+  };
 
   const handleOpenChange = (open: boolean) => {
-    setIsDialogOpen(open)
+    setIsDialogOpen(open);
     if (!open) {
-      setEditId(null)
-      setFormData({ name: "", color: "#3b82f6" })
+      setEditId(null);
+      setFormData({ name: "", color: "#3b82f6" });
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
     try {
       const payload = {
         name: formData.name,
         color: formData.color || null,
-      }
+      };
 
       if (editId) {
-        await api.put(`/tags/${editId}`, payload)
+        await api.put(`/tags/${editId}`, payload);
       } else {
-        await api.post("/tags", payload)
+        await api.post("/tags", payload);
       }
-      setIsDialogOpen(false)
-      setEditId(null)
-      setFormData({ name: "", color: "#3b82f6" })
-      fetchTags()
+      setIsDialogOpen(false);
+      setEditId(null);
+      setFormData({ name: "", color: "#3b82f6" });
+      fetchTags();
     } catch (err) {
-      console.error("Failed to save tag", err)
+      console.error("Failed to save tag", err);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="container max-w-6xl mx-auto py-8 px-4 space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Tags</h1>
-          <p className="text-muted-foreground">Organize your vocabulary, kanji, and grammar with tags.</p>
+          <p className="text-muted-foreground">
+            Organize your vocabulary, kanji, and grammar with tags.
+          </p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={handleOpenChange}>
@@ -143,16 +150,22 @@ export default function TagsPage() {
             <DialogHeader>
               <DialogTitle>{editId ? "Edit Tag" : "Create Tag"}</DialogTitle>
               <DialogDescription>
-                {editId ? "Update your tag details." : "Create a new tag to organize your study items."}
+                {editId
+                  ? "Update your tag details."
+                  : "Create a new tag to organize your study items."}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-5 py-4">
               <div className="space-y-2">
-                <Label htmlFor="tag-name">Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="tag-name">
+                  Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="tag-name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="e.g. N5, Daily Life, Anime"
                   required
                   maxLength={100}
@@ -171,26 +184,41 @@ export default function TagsPage() {
                       className="h-8 w-8 rounded-full border-2 transition-all hover:scale-110 focus:outline-none"
                       style={{
                         backgroundColor: color,
-                        borderColor: formData.color === color ? "var(--foreground)" : "transparent",
-                        boxShadow: formData.color === color ? `0 0 0 2px var(--background), 0 0 0 4px ${color}` : "none",
+                        borderColor:
+                          formData.color === color
+                            ? "var(--foreground)"
+                            : "transparent",
+                        boxShadow:
+                          formData.color === color
+                            ? `0 0 0 2px var(--background), 0 0 0 4px ${color}`
+                            : "none",
                       }}
                       title={color}
                     />
                   ))}
                 </div>
                 <div className="flex items-center gap-3 pt-1">
-                  <Label htmlFor="custom-color" className="text-sm text-muted-foreground whitespace-nowrap">Custom:</Label>
+                  <Label
+                    htmlFor="custom-color"
+                    className="text-sm text-muted-foreground whitespace-nowrap"
+                  >
+                    Custom:
+                  </Label>
                   <div className="flex items-center gap-2 flex-1">
                     <input
                       type="color"
                       id="custom-color"
                       value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
                       className="h-8 w-8 rounded cursor-pointer border border-border"
                     />
                     <Input
                       value={formData.color}
-                      onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, color: e.target.value })
+                      }
                       className="font-mono text-sm h-8"
                       placeholder="#000000"
                       maxLength={7}
@@ -200,7 +228,9 @@ export default function TagsPage() {
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   {editId ? "Update Tag" : "Create Tag"}
                 </Button>
               </DialogFooter>
@@ -220,7 +250,9 @@ export default function TagsPage() {
           </div>
           <div>
             <h3 className="text-lg font-semibold">No tags yet</h3>
-            <p className="text-muted-foreground text-sm mt-1">Create your first tag to start organizing your study items.</p>
+            <p className="text-muted-foreground text-sm mt-1">
+              Create your first tag to start organizing your study items.
+            </p>
           </div>
         </div>
       ) : (
@@ -236,7 +268,6 @@ export default function TagsPage() {
                     className="h-4 w-4 rounded-full shrink-0 ring-2 ring-offset-2 ring-offset-background"
                     style={{
                       backgroundColor: tag.color || "#78716c",
-                      ringColor: tag.color || "#78716c",
                     }}
                   />
                   <span className="font-medium truncate">{tag.name}</span>
@@ -263,12 +294,17 @@ export default function TagsPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Created {new Date(tag.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                Created{" "}
+                {new Date(tag.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </p>
             </div>
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }
