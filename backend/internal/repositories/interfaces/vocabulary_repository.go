@@ -29,6 +29,12 @@ type VocabularyRepository interface {
 		userID uuid.UUID,
 	) ([]models.Vocabulary, error)
 
+	FindFiltered(
+		ctx context.Context,
+		userID uuid.UUID,
+		filter models.ListFilter,
+	) ([]models.Vocabulary, error)
+
 	Update(
 		ctx context.Context,
 		vocabulary *models.Vocabulary,
@@ -38,11 +44,7 @@ type VocabularyRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
-	SearchByUserID(
-		ctx context.Context,
-		userID uuid.UUID,
-		search string,
-	) ([]models.Vocabulary, error)
+
 	FindRandomByUserID(
 		ctx context.Context,
 		userID uuid.UUID,

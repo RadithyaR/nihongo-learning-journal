@@ -45,7 +45,7 @@ func NewReviewService(
 func (s *reviewService) GetNextReview(
 	ctx context.Context,
 	userID uuid.UUID,
-) (*reviewDTO.NextReviewResponse, error) {
+) (*reviewDTO.NextReviewResult, error) {
 
 	record, err := s.srsService.GetNextDueItem(
 		ctx,
@@ -55,12 +55,11 @@ func (s *reviewService) GetNextReview(
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			// Check if they have any data at all
 			_, errData := s.vocabularyRepository.FindRandomByUserID(ctx, userID)
 			if errData != nil && errData == gorm.ErrRecordNotFound {
-				return nil, customErrors.ErrVocabularyNotFound // this means no data at all
+				return nil, customErrors.ErrVocabularyNotFound
 			}
-			return nil, gorm.ErrRecordNotFound // this means all caught up
+			return &reviewDTO.NextReviewResult{HasNext: false}, nil
 		}
 		return nil, err
 	}
@@ -74,10 +73,13 @@ func (s *reviewService) GetNextReview(
 		return nil, err
 	}
 
-	return &reviewDTO.NextReviewResponse{
-		ID:      vocabulary.ID,
-		Word:    vocabulary.Word,
-		Reading: vocabulary.Reading,
+	return &reviewDTO.NextReviewResult{
+		HasNext: true,
+		Review: &reviewDTO.NextReviewResponse{
+			ID:      vocabulary.ID,
+			Word:    vocabulary.Word,
+			Reading: vocabulary.Reading,
+		},
 	}, nil
 }
 
@@ -136,7 +138,7 @@ func (s *reviewService) SubmitReview(
 func (s *reviewService) GetNextKanjiReview(
 	ctx context.Context,
 	userID uuid.UUID,
-) (*reviewDTO.NextKanjiReviewResponse, error) {
+) (*reviewDTO.NextKanjiReviewResult, error) {
 
 	record, err := s.srsService.GetNextDueItem(
 		ctx,
@@ -148,9 +150,9 @@ func (s *reviewService) GetNextKanjiReview(
 		if err == gorm.ErrRecordNotFound {
 			_, errData := s.kanjiRepository.FindRandomByUserID(ctx, userID)
 			if errData != nil && errData == gorm.ErrRecordNotFound {
-				return nil, customErrors.ErrKanjiNotFound // no data
+				return nil, customErrors.ErrKanjiNotFound
 			}
-			return nil, gorm.ErrRecordNotFound // all caught up
+			return &reviewDTO.NextKanjiReviewResult{HasNext: false}, nil
 		}
 		return nil, err
 	}
@@ -164,12 +166,15 @@ func (s *reviewService) GetNextKanjiReview(
 		return nil, err
 	}
 
-	return &reviewDTO.NextKanjiReviewResponse{
-		ID:        kanji.ID,
-		Character: kanji.Character,
-		Meaning:   kanji.Meaning,
-		Onyomi:    kanji.Onyomi,
-		Kunyomi:   kanji.Kunyomi,
+	return &reviewDTO.NextKanjiReviewResult{
+		HasNext: true,
+		Review: &reviewDTO.NextKanjiReviewResponse{
+			ID:        kanji.ID,
+			Character: kanji.Character,
+			Meaning:   kanji.Meaning,
+			Onyomi:    kanji.Onyomi,
+			Kunyomi:   kanji.Kunyomi,
+		},
 	}, nil
 }
 
@@ -228,7 +233,7 @@ func (s *reviewService) SubmitKanjiReview(
 func (s *reviewService) GetNextGrammarReview(
 	ctx context.Context,
 	userID uuid.UUID,
-) (*reviewDTO.NextGrammarReviewResponse, error) {
+) (*reviewDTO.NextGrammarReviewResult, error) {
 
 	record, err := s.srsService.GetNextDueItem(
 		ctx,
@@ -240,9 +245,9 @@ func (s *reviewService) GetNextGrammarReview(
 		if err == gorm.ErrRecordNotFound {
 			_, errData := s.grammarRepository.FindRandomByUserID(ctx, userID)
 			if errData != nil && errData == gorm.ErrRecordNotFound {
-				return nil, customErrors.ErrGrammarNotFound // no data
+				return nil, customErrors.ErrGrammarNotFound
 			}
-			return nil, gorm.ErrRecordNotFound // all caught up
+			return &reviewDTO.NextGrammarReviewResult{HasNext: false}, nil
 		}
 		return nil, err
 	}
@@ -256,10 +261,13 @@ func (s *reviewService) GetNextGrammarReview(
 		return nil, err
 	}
 
-	return &reviewDTO.NextGrammarReviewResponse{
-		ID:      grammar.ID,
-		Pattern: grammar.Pattern,
-		Meaning: grammar.Meaning,
+	return &reviewDTO.NextGrammarReviewResult{
+		HasNext: true,
+		Review: &reviewDTO.NextGrammarReviewResponse{
+			ID:      grammar.ID,
+			Pattern: grammar.Pattern,
+			Meaning: grammar.Meaning,
+		},
 	}, nil
 }
 

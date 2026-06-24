@@ -111,31 +111,14 @@ func (s *grammarService) GetGrammarByID(
 func (s *grammarService) GetGrammarList(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]grammarDTO.GrammarResponse, error) {
 
-	var (
-		grammars []models.Grammar
-		err error
+	grammars, err := s.grammarRepository.FindFiltered(
+		ctx,
+		userID,
+		filter,
 	)
-
-	if search != "" {
-
-		grammars, err =
-			s.grammarRepository.SearchByUserID(
-				ctx,
-				userID,
-				search,
-			)
-
-	} else {
-
-		grammars, err =
-			s.grammarRepository.FindAllByUserID(
-				ctx,
-				userID,
-			)
-	}
 
 	if err != nil {
 		return nil, err

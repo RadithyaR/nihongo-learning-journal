@@ -29,10 +29,10 @@ type KanjiRepository interface {
 		userID uuid.UUID,
 	) ([]models.Kanji, error)
 
-	SearchByUserID(
+	FindFiltered(
 		ctx context.Context,
 		userID uuid.UUID,
-		search string,
+		filter models.ListFilter,
 	) ([]models.Kanji, error)
 
 	Update(
@@ -44,6 +44,7 @@ type KanjiRepository interface {
 		ctx context.Context,
 		id uuid.UUID,
 	) error
+
 	FindRandomByUserID(
 		ctx context.Context,
 		userID uuid.UUID,

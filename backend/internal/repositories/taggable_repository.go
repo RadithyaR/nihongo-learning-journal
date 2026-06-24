@@ -55,6 +55,8 @@ func (r *taggableRepository) Exists(
 	).Where(
 		"item_id = ?",
 		itemID,
+	).Where(
+		"deleted_at IS NULL",
 	).Count(
 		&count,
 	).Error
@@ -102,7 +104,7 @@ func (r *taggableRepository) FindTagsByItem(
 	).Model(
 		&models.Tag{},
 	).Joins(
-		"JOIN taggables ON taggables.tag_id = tags.id",
+		"JOIN taggables ON taggables.tag_id = tags.id AND taggables.deleted_at IS NULL",
 	).Where(
 		"taggables.item_type = ?",
 		itemType,

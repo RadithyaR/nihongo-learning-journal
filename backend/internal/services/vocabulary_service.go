@@ -153,31 +153,14 @@ func (s *vocabularyService) GetVocabularyByID(
 func (s *vocabularyService) GetVocabularyList(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]vocabularyDTO.VocabularyResponse, error) {
 
-	var (
-		vocabularies []models.Vocabulary
-		err error
+	vocabularies, err := s.vocabularyRepository.FindFiltered(
+		ctx,
+		userID,
+		filter,
 	)
-
-	if search != "" {
-
-		vocabularies, err =
-			s.vocabularyRepository.SearchByUserID(
-				ctx,
-				userID,
-				search,
-			)
-
-	} else {
-
-		vocabularies, err =
-			s.vocabularyRepository.FindAllByUserID(
-				ctx,
-				userID,
-			)
-	}
 
 	if err != nil {
 		return nil, err

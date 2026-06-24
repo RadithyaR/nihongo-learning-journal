@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { api } from "@/lib/axios"
-import { Plus, Search, Edit, Trash2, Heart, Loader2, ImageIcon, Upload, X } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Heart, Loader2, ImageIcon, Upload, X, Filter, ArrowUpDown } from "lucide-react"
+import { TagPicker } from "@/components/tag-picker"
 import { v4 as uuidv4 } from "uuid"
 import { supabase } from "@/lib/supabase"
 import { useAuthStore } from "@/store/auth"
@@ -28,6 +29,19 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+interface TagItem {
+  id: string
+  name: string
+  color?: string | null
+}
 
 interface Grammar {
   id: string
@@ -40,6 +54,7 @@ interface Grammar {
   status?: string
   image_url?: string
   favourite: boolean
+  tags?: TagItem[]
 }
 
 export default function GrammarPage() {
@@ -47,6 +62,10 @@ export default function GrammarPage() {
   const [grammars, setGrammars] = useState<Grammar[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [filterFavourite, setFilterFavourite] = useState<string>("all")
+  const [filterTag, setFilterTag] = useState<string>("all")
+  const [filterSort, setFilterSort] = useState<string>("newest")
+  const [tags, setTags] = useState<TagItem[]>([])
 
   const [viewImageUrl, setViewImageUrl] = useState<string | null>(null)
 
@@ -65,24 +84,44 @@ export default function GrammarPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState("")
 
-  const fetchGrammars = async (query = "") => {
+  const fetchTags = async () => {
+    try {
+      const response = await api.get("/tags")
+      setTags(response.data.data)
+    } catch (err) {
+      console.error("Failed to load tags", err)
+    }
+  }
+
+  const fetchGrammars = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await api.get(`/grammars${query ? `?search=${query}` : ""}`)
+      const params = new URLSearchParams()
+      if (search) params.set("search", search)
+      if (filterFavourite === "true") params.set("favourite", "true")
+      if (filterTag !== "all") params.set("tagId", filterTag)
+      if (filterSort) params.set("sort", filterSort)
+
+      const queryString = params.toString()
+      const response = await api.get(`/grammars${queryString ? `?${queryString}` : ""}`)
       setGrammars(response.data.data)
     } catch (err) {
       console.error("Failed to load grammars", err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, filterFavourite, filterTag, filterSort])
+
+  useEffect(() => {
+    fetchTags()
+  }, [])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchGrammars(search)
+      fetchGrammars()
     }, 500)
     return () => clearTimeout(delayDebounceFn)
-  }, [search])
+  }, [fetchGrammars])
 
   const toggleFavourite = async (id: string) => {
     try {
@@ -141,7 +180,7 @@ export default function GrammarPage() {
       setIsDialogOpen(false)
       setEditId(null)
       setFormData({ pattern: "", meaning: "", example: "", note: "", source: "", jlpt_level: "", image_url: "" })
-      fetchGrammars(search)
+      fetchGrammars()
     } catch (err) {
       console.error("Failed to save", err)
     } finally {
@@ -321,6 +360,50 @@ export default function GrammarPage() {
         />
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Filter:</span>
+        </div>
+
+        <Select value={filterFavourite} onValueChange={setFilterFavourite}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Favourite" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Items</SelectItem>
+            <SelectItem value="true">Favourited</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTag} onValueChange={setFilterTag}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tags</SelectItem>
+            {tags.map((tag) => (
+              <SelectItem key={tag.id} value={tag.id}>
+                {tag.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select value={filterSort} onValueChange={setFilterSort}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -331,19 +414,20 @@ export default function GrammarPage() {
               <TableHead>Example</TableHead>
               <TableHead className="w-[60px] text-center"><ImageIcon className="h-4 w-4 mx-auto text-muted-foreground"/></TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
             ) : grammars.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                   No Grammar patterns found.
                 </TableCell>
               </TableRow>
@@ -376,6 +460,16 @@ export default function GrammarPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       {item.status || "NEW"}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <TagPicker
+                      itemId={item.id}
+                      itemType="GRAMMAR"
+                      attachedTags={item.tags}
+                      onTagsChange={(tags) => {
+                        setGrammars(grammars.map(g => g.id === item.id ? { ...g, tags } : g))
+                      }}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" title="Edit" onClick={() => openEdit(item)}>

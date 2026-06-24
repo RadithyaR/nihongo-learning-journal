@@ -91,21 +91,42 @@ func (r *kanjiRepository) FindAllByUserID(
 	return kanjis, nil
 }
 
-func (r *kanjiRepository) SearchByUserID(
+func (r *kanjiRepository) FindFiltered(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]models.Kanji, error) {
 
 	var kanjis []models.Kanji
 
-	err := r.db.WithContext(ctx).
-		Where(
-			"user_id = ? AND character ILIKE ?",
-			userID,
-			"%"+search+"%",
-		).
-		Find(&kanjis).Error
+	query := r.db.WithContext(ctx).
+		Where("user_id = ?", userID)
+
+	if filter.Search != "" {
+		query = query.Where("character ILIKE ?", "%"+filter.Search+"%")
+	}
+
+	if filter.Favourite != nil {
+		query = query.Where("favourite = ?", *filter.Favourite)
+	}
+
+	if filter.TagID != nil {
+		query = query.Joins(
+			"JOIN taggables ON taggables.item_id = kanjis.id AND taggables.deleted_at IS NULL",
+		).Where(
+			"taggables.tag_id = ? AND taggables.item_type = 'KANJI'",
+			*filter.TagID,
+		)
+	}
+
+	switch filter.SortBy {
+	case "oldest":
+		query = query.Order("created_at ASC")
+	default:
+		query = query.Order("created_at DESC")
+	}
+
+	err := query.Find(&kanjis).Error
 
 	if err != nil {
 		return nil, err

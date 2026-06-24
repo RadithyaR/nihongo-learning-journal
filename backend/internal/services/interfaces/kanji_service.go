@@ -4,6 +4,7 @@ import (
 	"context"
 
 	kanjiDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/kanji"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ type KanjiService interface {
 	GetKanjiList(
 		ctx context.Context,
 		userID uuid.UUID,
-		search string,
+		filter models.ListFilter,
 	) ([]kanjiDTO.KanjiResponse, error)
 
 	UpdateKanji(

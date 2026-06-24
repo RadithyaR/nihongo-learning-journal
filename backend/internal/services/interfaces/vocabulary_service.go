@@ -4,6 +4,7 @@ import (
 	"context"
 
 	vocabularyDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/vocabulary"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -23,7 +24,7 @@ type VocabularyService interface {
 	GetVocabularyList(
 		ctx context.Context,
 		userID uuid.UUID,
-		search string,
+		filter models.ListFilter,
 	) ([]vocabularyDTO.VocabularyResponse, error)
 
 	UpdateVocabulary(

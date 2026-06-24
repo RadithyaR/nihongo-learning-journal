@@ -51,7 +51,15 @@ export default function ReviewPage() {
       if (selectedMode === "grammar") endpoint = "/reviews/grammar/next"
 
       const response = await api.get(endpoint)
-      const data = response.data.data
+      const result = response.data.data
+
+      if (!result.has_next) {
+        setCurrentItem(null)
+        setErrorMsg(null)
+        return
+      }
+
+      const data = result.review
 
       if (selectedMode === "vocabulary") {
         setCurrentItem({ id: data.id, question: data.word, reading: data.reading })

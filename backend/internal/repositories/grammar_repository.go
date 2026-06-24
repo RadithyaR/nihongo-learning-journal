@@ -91,21 +91,42 @@ func (r *grammarRepository) FindAllByUserID(
 	return grammars, nil
 }
 
-func (r *grammarRepository) SearchByUserID(
+func (r *grammarRepository) FindFiltered(
 	ctx context.Context,
 	userID uuid.UUID,
-	search string,
+	filter models.ListFilter,
 ) ([]models.Grammar, error) {
 
 	var grammars []models.Grammar
 
-	err := r.db.WithContext(ctx).
-		Where(
-			"user_id = ? AND pattern ILIKE ?",
-			userID,
-			"%"+search+"%",
-		).
-		Find(&grammars).Error
+	query := r.db.WithContext(ctx).
+		Where("user_id = ?", userID)
+
+	if filter.Search != "" {
+		query = query.Where("pattern ILIKE ?", "%"+filter.Search+"%")
+	}
+
+	if filter.Favourite != nil {
+		query = query.Where("favourite = ?", *filter.Favourite)
+	}
+
+	if filter.TagID != nil {
+		query = query.Joins(
+			"JOIN taggables ON taggables.item_id = grammars.id AND taggables.deleted_at IS NULL",
+		).Where(
+			"taggables.tag_id = ? AND taggables.item_type = 'GRAMMAR'",
+			*filter.TagID,
+		)
+	}
+
+	switch filter.SortBy {
+	case "oldest":
+		query = query.Order("created_at ASC")
+	default:
+		query = query.Order("created_at DESC")
+	}
+
+	err := query.Find(&grammars).Error
 
 	if err != nil {
 		return nil, err

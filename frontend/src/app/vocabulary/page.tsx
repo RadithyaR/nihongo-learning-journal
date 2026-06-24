@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { api } from "@/lib/axios"
-import { Plus, Search, Edit, Trash2, Heart, Loader2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Heart, Loader2, Filter, ArrowUpDown } from "lucide-react"
+import { TagPicker } from "@/components/tag-picker"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +25,19 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+interface TagItem {
+  id: string
+  name: string
+  color?: string | null
+}
 
 interface Meaning {
   id: string
@@ -40,12 +54,17 @@ interface Vocabulary {
   status?: string
   favourite: boolean
   meanings: Meaning[]
+  tags?: TagItem[]
 }
 
 export default function VocabularyPage() {
   const [vocabularies, setVocabularies] = useState<Vocabulary[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
+  const [filterFavourite, setFilterFavourite] = useState<string>("all")
+  const [filterTag, setFilterTag] = useState<string>("all")
+  const [filterSort, setFilterSort] = useState<string>("newest")
+  const [tags, setTags] = useState<TagItem[]>([])
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -58,24 +77,44 @@ export default function VocabularyPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const fetchVocabularies = async (query = "") => {
+  const fetchTags = async () => {
+    try {
+      const response = await api.get("/tags")
+      setTags(response.data.data)
+    } catch (err) {
+      console.error("Failed to load tags", err)
+    }
+  }
+
+  const fetchVocabularies = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await api.get(`/vocabularies${query ? `?search=${query}` : ""}`)
+      const params = new URLSearchParams()
+      if (search) params.set("search", search)
+      if (filterFavourite === "true") params.set("favourite", "true")
+      if (filterTag !== "all") params.set("tagId", filterTag)
+      if (filterSort) params.set("sort", filterSort)
+
+      const queryString = params.toString()
+      const response = await api.get(`/vocabularies${queryString ? `?${queryString}` : ""}`)
       setVocabularies(response.data.data)
     } catch (err) {
       console.error("Failed to load vocabularies", err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [search, filterFavourite, filterTag, filterSort])
+
+  useEffect(() => {
+    fetchTags()
+  }, [])
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchVocabularies(search)
+      fetchVocabularies()
     }, 500)
     return () => clearTimeout(delayDebounceFn)
-  }, [search])
+  }, [fetchVocabularies])
 
   const toggleFavourite = async (id: string) => {
     try {
@@ -156,7 +195,7 @@ export default function VocabularyPage() {
       setIsDialogOpen(false)
       setEditId(null)
       setFormData({ word: "", reading: "", meanings: [""], source: "", note: "" })
-      fetchVocabularies(search)
+      fetchVocabularies()
     } catch (err) {
       console.error("Failed to save", err)
     } finally {
@@ -262,6 +301,50 @@ export default function VocabularyPage() {
         />
       </div>
 
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Filter:</span>
+        </div>
+
+        <Select value={filterFavourite} onValueChange={setFilterFavourite}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Favourite" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Items</SelectItem>
+            <SelectItem value="true">Favourited</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filterTag} onValueChange={setFilterTag}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Tag" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tags</SelectItem>
+            {tags.map((tag) => (
+              <SelectItem key={tag.id} value={tag.id}>
+                {tag.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+          <Select value={filterSort} onValueChange={setFilterSort}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Sort" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -271,19 +354,20 @@ export default function VocabularyPage() {
               <TableHead>Reading</TableHead>
               <TableHead>Meanings</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Tags</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                 </TableCell>
               </TableRow>
             ) : vocabularies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                   No vocabulary found. Add your first word!
                 </TableCell>
               </TableRow>
@@ -307,6 +391,16 @@ export default function VocabularyPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                       {item.status || "NEW"}
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <TagPicker
+                      itemId={item.id}
+                      itemType="VOCABULARY"
+                      attachedTags={item.tags}
+                      onTagsChange={(tags) => {
+                        setVocabularies(vocabularies.map(v => v.id === item.id ? { ...v, tags } : v))
+                      }}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" title="Edit" onClick={() => openEdit(item)}>
