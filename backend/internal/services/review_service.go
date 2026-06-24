@@ -53,30 +53,21 @@ func (s *reviewService) GetNextReview(
 		constants.ReviewTypeVocabulary,
 	)
 
-	if err == nil {
-
-		vocabulary, err := s.vocabularyRepository.FindByID(
-			ctx,
-			record.ItemID,
-		)
-
-		if err == nil {
-
-			return &reviewDTO.NextReviewResponse{
-				ID:      vocabulary.ID,
-				Word:    vocabulary.Word,
-				Reading: vocabulary.Reading,
-			}, nil
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Check if they have any data at all
+			_, errData := s.vocabularyRepository.FindRandomByUserID(ctx, userID)
+			if errData != nil && errData == gorm.ErrRecordNotFound {
+				return nil, customErrors.ErrVocabularyNotFound // this means no data at all
+			}
+			return nil, gorm.ErrRecordNotFound // this means all caught up
 		}
-	}
-
-	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
-	vocabulary, err := s.vocabularyRepository.FindRandomByUserID(
+	vocabulary, err := s.vocabularyRepository.FindByID(
 		ctx,
-		userID,
+		record.ItemID,
 	)
 
 	if err != nil {
@@ -153,32 +144,20 @@ func (s *reviewService) GetNextKanjiReview(
 		constants.ReviewTypeKanji,
 	)
 
-	if err == nil {
-
-		kanji, err := s.kanjiRepository.FindByID(
-			ctx,
-			record.ItemID,
-		)
-
-		if err == nil {
-
-			return &reviewDTO.NextKanjiReviewResponse{
-				ID:        kanji.ID,
-				Character: kanji.Character,
-				Meaning:   kanji.Meaning,
-				Onyomi:    kanji.Onyomi,
-				Kunyomi:   kanji.Kunyomi,
-			}, nil
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			_, errData := s.kanjiRepository.FindRandomByUserID(ctx, userID)
+			if errData != nil && errData == gorm.ErrRecordNotFound {
+				return nil, customErrors.ErrKanjiNotFound // no data
+			}
+			return nil, gorm.ErrRecordNotFound // all caught up
 		}
-	}
-
-	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
-	kanji, err := s.kanjiRepository.FindRandomByUserID(
+	kanji, err := s.kanjiRepository.FindByID(
 		ctx,
-		userID,
+		record.ItemID,
 	)
 
 	if err != nil {
@@ -257,30 +236,20 @@ func (s *reviewService) GetNextGrammarReview(
 		constants.ReviewTypeGrammar,
 	)
 
-	if err == nil {
-
-		grammar, err := s.grammarRepository.FindByID(
-			ctx,
-			record.ItemID,
-		)
-
-		if err == nil {
-
-			return &reviewDTO.NextGrammarReviewResponse{
-				ID:      grammar.ID,
-				Pattern: grammar.Pattern,
-				Meaning: grammar.Meaning,
-			}, nil
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			_, errData := s.grammarRepository.FindRandomByUserID(ctx, userID)
+			if errData != nil && errData == gorm.ErrRecordNotFound {
+				return nil, customErrors.ErrGrammarNotFound // no data
+			}
+			return nil, gorm.ErrRecordNotFound // all caught up
 		}
-	}
-
-	if err != nil && err != gorm.ErrRecordNotFound {
 		return nil, err
 	}
 
-	grammar, err := s.grammarRepository.FindRandomByUserID(
+	grammar, err := s.grammarRepository.FindByID(
 		ctx,
-		userID,
+		record.ItemID,
 	)
 
 	if err != nil {

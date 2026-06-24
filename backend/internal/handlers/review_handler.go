@@ -44,6 +44,13 @@ func (h *ReviewHandler) GetNextReview(
 	)
 
 	if err != nil {
+		if err.Error() == "vocabulary not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any vocabulary yet")
+			return
+		} else if err.Error() == "record not found" {
+			responses.Error(c, http.StatusNotFound, "all caught up")
+			return
+		}
 
 		responses.Error(
 			c,
@@ -150,6 +157,13 @@ func (h *ReviewHandler) GetNextKanjiReview(
 	)
 
 	if err != nil {
+		if err.Error() == "kanji not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any kanji yet")
+			return
+		} else if err.Error() == "record not found" {
+			responses.Error(c, http.StatusNotFound, "all caught up")
+			return
+		}
 
 		responses.Error(
 			c,
@@ -257,7 +271,13 @@ func (h *ReviewHandler) GetNextGrammarReview(
 		)
 
 	if err != nil {
-
+		if err.Error() == "grammar not found" {
+			responses.Error(c, http.StatusNotFound, "You haven't added any grammar yet")
+			return
+		} else if err.Error() == "record not found" {
+			responses.Error(c, http.StatusNotFound, "all caught up")
+			return
+		}
 		responses.Error(
 			c,
 			http.StatusInternalServerError,
