@@ -99,7 +99,7 @@ func main() {
 
 	profileService := services.NewProfileService(userRepository)
 
-	vocabularyService := services.NewVocabularyService(vocabularyRepository)
+	vocabularyService := services.NewVocabularyService(vocabularyRepository, srsRepository)
 
 	studySessionService := services.NewStudySessionService(
 	studySessionRepository,
@@ -119,9 +119,9 @@ func main() {
 		srsService,
 	)
 
-	kanjiService := services.NewKanjiService(kanjiRepository)
+	kanjiService := services.NewKanjiService(kanjiRepository, srsRepository)
 
-	grammarService := services.NewGrammarService(grammarRepository)
+	grammarService := services.NewGrammarService(grammarRepository, srsRepository)
 
 	goalService := services.NewGoalService(goalRepository)
 

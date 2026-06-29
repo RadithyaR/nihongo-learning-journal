@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"time"
 
 	vocabularyDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/vocabulary"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/constants"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
 	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
@@ -14,13 +16,16 @@ import (
 
 type vocabularyService struct {
 	vocabularyRepository repositoryInterfaces.VocabularyRepository
+	srsRepository        repositoryInterfaces.SRSRepository
 }
 
 func NewVocabularyService(
 	vocabularyRepository repositoryInterfaces.VocabularyRepository,
+	srsRepository repositoryInterfaces.SRSRepository,
 ) serviceInterface.VocabularyService {
 	return &vocabularyService{
 		vocabularyRepository: vocabularyRepository,
+		srsRepository:        srsRepository,
 	}
 }
 
@@ -73,6 +78,20 @@ func (s *vocabularyService) CreateVocabulary(
 	)
 
 	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	srsRecord := models.SRSRecord{
+		UserID:       userID,
+		ItemType:     constants.ReviewTypeVocabulary,
+		ItemID:       vocabulary.ID,
+		EaseFactor:   2.5,
+		IntervalDays: 0,
+		ReviewCount:  0,
+		NextReviewAt: now,
+	}
+	if err := s.srsRepository.Create(ctx, &srsRecord); err != nil {
 		return nil, err
 	}
 

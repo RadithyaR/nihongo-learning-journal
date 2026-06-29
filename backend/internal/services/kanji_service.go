@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	kanjiDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/kanji"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/constants"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
 	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
@@ -15,14 +17,17 @@ import (
 
 type kanjiService struct {
 	kanjiRepository repositoryInterfaces.KanjiRepository
+	srsRepository   repositoryInterfaces.SRSRepository
 }
 
 func NewKanjiService(
 	kanjiRepository repositoryInterfaces.KanjiRepository,
+	srsRepository repositoryInterfaces.SRSRepository,
 ) serviceInterface.KanjiService {
 
 	return &kanjiService{
 		kanjiRepository: kanjiRepository,
+		srsRepository:   srsRepository,
 	}
 }
 
@@ -81,6 +86,20 @@ func (s *kanjiService) CreateKanji(
 		ctx,
 		&kanji,
 	); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	srsRecord := models.SRSRecord{
+		UserID:       userID,
+		ItemType:     constants.ReviewTypeKanji,
+		ItemID:       kanji.ID,
+		EaseFactor:   2.5,
+		IntervalDays: 0,
+		ReviewCount:  0,
+		NextReviewAt: now,
+	}
+	if err := s.srsRepository.Create(ctx, &srsRecord); err != nil {
 		return nil, err
 	}
 

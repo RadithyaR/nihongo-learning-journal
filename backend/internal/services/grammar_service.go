@@ -3,8 +3,10 @@ package services
 import (
 	"context"
 	"errors"
+	"time"
 
 	grammarDTO "github.com/RadithyaR/nihongo-learning-journal/backend/internal/dto/grammar"
+	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/constants"
 	"github.com/RadithyaR/nihongo-learning-journal/backend/internal/models"
 	repositoryInterfaces "github.com/RadithyaR/nihongo-learning-journal/backend/internal/repositories/interfaces"
 	serviceInterface "github.com/RadithyaR/nihongo-learning-journal/backend/internal/services/interfaces"
@@ -15,14 +17,17 @@ import (
 
 type grammarService struct {
 	grammarRepository repositoryInterfaces.GrammarRepository
+	srsRepository     repositoryInterfaces.SRSRepository
 }
 
 func NewGrammarService(
 	grammarRepository repositoryInterfaces.GrammarRepository,
+	srsRepository repositoryInterfaces.SRSRepository,
 ) serviceInterface.GrammarService {
 
 	return &grammarService{
 		grammarRepository: grammarRepository,
+		srsRepository:     srsRepository,
 	}
 }
 
@@ -76,6 +81,20 @@ func (s *grammarService) CreateGrammar(
 		ctx,
 		&grammar,
 	); err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	srsRecord := models.SRSRecord{
+		UserID:       userID,
+		ItemType:     constants.ReviewTypeGrammar,
+		ItemID:       grammar.ID,
+		EaseFactor:   2.5,
+		IntervalDays: 0,
+		ReviewCount:  0,
+		NextReviewAt: now,
+	}
+	if err := s.srsRepository.Create(ctx, &srsRecord); err != nil {
 		return nil, err
 	}
 
