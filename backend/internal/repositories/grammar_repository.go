@@ -151,6 +151,7 @@ func (r *grammarRepository) Delete(
 ) error {
 
 	return r.db.WithContext(ctx).
+		Unscoped().
 		Delete(&models.Grammar{}, id).
 		Error
 }

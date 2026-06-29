@@ -151,6 +151,7 @@ func (r *kanjiRepository) Delete(
 ) error {
 
 	return r.db.WithContext(ctx).
+		Unscoped().
 		Delete(&models.Kanji{}, id).
 		Error
 }

@@ -99,7 +99,7 @@ func (r *goalRepository) Delete(
 
 	return r.db.WithContext(
 		ctx,
-	).Delete(
+	).Unscoped().Delete(
 		&models.Goal{},
 		"id = ?",
 		id,
