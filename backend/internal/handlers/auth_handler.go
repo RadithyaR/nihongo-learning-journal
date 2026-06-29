@@ -29,6 +29,7 @@ func setRefreshTokenCookie(c *gin.Context, value string, maxAge int) {
 		MaxAge:   maxAge,
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
 }
