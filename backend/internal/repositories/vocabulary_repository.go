@@ -129,7 +129,7 @@ func (r *vocabularyRepository) Delete(
 
 	return r.db.WithContext(
 		ctx,
-	).Delete(
+	).Unscoped().Delete(
 		&models.Vocabulary{},
 		"id = ?",
 		id,

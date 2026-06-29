@@ -128,7 +128,7 @@ func (r *tagRepository) Delete(
 
 	return r.db.WithContext(
 		ctx,
-	).Delete(
+	).Unscoped().Delete(
 		tag,
 	).Error
 }

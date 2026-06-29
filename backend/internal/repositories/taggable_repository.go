@@ -86,7 +86,7 @@ func (r *taggableRepository) Delete(
 	).Where(
 		"item_id = ?",
 		itemID,
-	).Delete(
+	).Unscoped().Delete(
 		&models.Taggable{},
 	).Error
 }
