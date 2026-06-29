@@ -117,8 +117,8 @@ export default function ProfilePage() {
     setPasswordMsg({ type: "", text: "" })
     try {
       await api.post("/auth/change-password", {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword
+        current_password: data.currentPassword,
+        new_password: data.newPassword
       })
       setPasswordMsg({ type: "success", text: "Password changed successfully" })
       passwordForm.reset()
