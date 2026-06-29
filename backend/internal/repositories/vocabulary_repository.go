@@ -136,6 +136,33 @@ func (r *vocabularyRepository) Delete(
 	).Error
 }
 
+func (r *vocabularyRepository) DeleteMeaningsByVocabularyID(
+	ctx context.Context,
+	vocabularyID uuid.UUID,
+) error {
+
+	return r.db.WithContext(
+		ctx,
+	).Where(
+		"vocabulary_id = ?",
+		vocabularyID,
+	).Delete(
+		&models.VocabularyMeaning{},
+	).Error
+}
+
+func (r *vocabularyRepository) CreateMeanings(
+	ctx context.Context,
+	meanings []models.VocabularyMeaning,
+) error {
+
+	return r.db.WithContext(
+		ctx,
+	).Create(
+		meanings,
+	).Error
+}
+
 func (r *vocabularyRepository) FindFiltered(
 	ctx context.Context,
 	userID uuid.UUID,
