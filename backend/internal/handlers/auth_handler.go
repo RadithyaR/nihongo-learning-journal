@@ -22,6 +22,17 @@ func NewAuthHandler(authService serviceInterface.AuthService) *AuthHandler{
 	}
 }
 
+func setRefreshTokenCookie(c *gin.Context, value string, maxAge int) {
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    value,
+		MaxAge:   maxAge,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
+}
+
 func (h *AuthHandler) Register(c *gin.Context) {
 	var dto authDTO.RegisterDTO
 
@@ -185,15 +196,7 @@ func (h *AuthHandler) Login(c *gin.Context){
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		result.RefreshToken,
-		60*60*24*7,
-		"/",
-		"",
-		false,
-		true,
-	)
+	setRefreshTokenCookie(c, result.RefreshToken, 60*60*24*7)
 
 	responses.Success(
 		c,
@@ -201,7 +204,7 @@ func (h *AuthHandler) Login(c *gin.Context){
 		"login success",
 		gin.H{
 			"access_token": result.AccessToken,
-			"user": result.User,
+			"user":         result.User,
 		},
 	)
 }
@@ -276,15 +279,7 @@ func (h *AuthHandler) RefreshToken(
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		result.RefreshToken,
-		60*60*24*7,
-		"/",
-		"",
-		false,
-		true,
-	)
+	setRefreshTokenCookie(c, result.RefreshToken, 60*60*24*7)
 
 	responses.Success(
 		c,
@@ -330,15 +325,7 @@ func (h *AuthHandler) Logout(
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		"",
-		-1,
-		"/",
-		"",
-		false,
-		true,
-	)
+	setRefreshTokenCookie(c, "", -1)
 
 	responses.Success(
 		c,
@@ -378,15 +365,7 @@ func (h *AuthHandler) LogoutAll(
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		"",
-		-1,
-		"/",
-		"",
-		false,
-		true,
-	)
+	setRefreshTokenCookie(c, "", -1)
 
 	responses.Success(
 		c,

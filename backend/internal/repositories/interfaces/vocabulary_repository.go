@@ -45,6 +45,16 @@ type VocabularyRepository interface {
 		id uuid.UUID,
 	) error
 
+	DeleteMeaningsByVocabularyID(
+		ctx context.Context,
+		vocabularyID uuid.UUID,
+	) error
+
+	CreateMeanings(
+		ctx context.Context,
+		meanings []models.VocabularyMeaning,
+	) error
+
 	FindRandomByUserID(
 		ctx context.Context,
 		userID uuid.UUID,

@@ -223,6 +223,38 @@ func (s *vocabularyService) UpdateVocabulary(
 		return nil, err
 	}
 
+	err = s.vocabularyRepository.DeleteMeaningsByVocabularyID(
+		ctx,
+		vocabulary.ID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var newMeanings []models.VocabularyMeaning
+	for i, meaning := range dto.Meanings {
+		newMeanings = append(
+			newMeanings,
+			models.VocabularyMeaning{
+				VocabularyID: vocabulary.ID,
+				Meaning:      meaning,
+				OrderNumber:  i + 1,
+			},
+		)
+	}
+
+	err = s.vocabularyRepository.CreateMeanings(
+		ctx,
+		newMeanings,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	vocabulary.Meanings = newMeanings
+
 	return s.mapVocabularyResponse(
 		vocabulary,
 	), nil
